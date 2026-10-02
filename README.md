@@ -17,8 +17,9 @@ outlives a disconnect.
   one place rather than baked into every devcontainer.
 - **qemu-guest-agent**, only with `dev_stack_qemu_guest_agent: true`: it reports
   the guest IP and heartbeat to a QEMU/Proxmox host and is useless elsewhere.
-- **Docker Engine** from Docker's own apt repository, the DevPod container
-  runtime. The login user is added to the `docker` group.
+- **A container runtime for DevPod**: Docker Engine from Docker's own apt
+  repository by default, with the login user in the `docker` group; or rootless
+  Podman (see "Container runtime" below).
 - **DevPod CLI**: a single static binary in `/usr/local/bin`.
 - **Shell**: `zsh` and `oh-my-zsh` for the operator, with zsh as the login
   shell. zsh is load-bearing, not just preference: it sources `~/.zshenv` on
@@ -33,6 +34,39 @@ outlives a disconnect.
 Out of scope: a host firewall (the role targets a single-owner host reached
 key-only, typically over a private network or VPN), VPN clients, and everything
 inside the devcontainers.
+
+## Container runtime
+
+`dev_stack_container_runtime` picks one of three:
+
+| Value | What the role does |
+| --- | --- |
+| `docker` (default) | Docker Engine from Docker's apt repository; the user joins the `docker` group |
+| `podman` | rootless Podman: removes the Docker packages, installs `podman`, `podman-docker`, `slirp4netns` and `uidmap`, makes `/` a shared mount at boot, enables linger and the user's `podman.socket`, and exports `DOCKER_HOST` in `~/.profile` and `~/.zprofile` |
+| `none` | no container runtime |
+
+Why it is set up this way:
+
+- **Docker is the default** because the devcontainer ecosystem is Docker-first:
+  features such as docker-in-docker and socket mounting are built and tested
+  against Docker, and DevPod's best-travelled driver is the `docker` one.
+- **Podman runs rootless**, with no daemon and no root-owned socket. That is the
+  point of choosing it; a rootful Podman would buy nothing over Docker.
+- **DevPod finds Podman through `podman-docker`**, which provides a `docker`
+  command. DevPod's default `docker` provider, and every other tool that calls
+  `docker`, work unchanged; nothing per user under `~/.devpod` is configured.
+- **The two never coexist on one host**: both answer to `docker` and
+  `DOCKER_HOST`, so choosing Podman removes the Docker packages.
+- **`/` is a shared mount**, which rootless Podman expects. systemd makes it one
+  on a normal host; where `/` comes up private, as on WSL or in a container,
+  the unit `dev-stack-shared-root.service` runs `mount --make-rshared /` at
+  every boot.
+
+On WSL the distribution needs `systemd=true` in `/etc/wsl.conf`. Whoever
+creates the distribution sets that; this role does not touch `wsl.conf`.
+
+The Podman path is tested on Debian 13 and Ubuntu 24.04. The rest of the role
+targets Debian 13 for now.
 
 ## The two-identity credential model
 
@@ -94,10 +128,12 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | `dev_stack_apt_upgrade` | `true` | Run `apt dist-upgrade` first. |
 | `dev_stack_base_packages` | `ca-certificates`, `tmux` | Base packages for every host. |
 | `dev_stack_qemu_guest_agent` | `false` | Install and start qemu-guest-agent; set it on a QEMU/Proxmox VM. |
-| `dev_stack_install_docker` | `true` | Install Docker Engine and add the user to `docker`. |
+| `dev_stack_container_runtime` | `docker` | `docker`, `podman` (rootless) or `none`; see "Container runtime". |
+| `dev_stack_install_docker` | `true` | Deprecated: `false` means runtime `none`. |
 | `dev_stack_docker_gpg_url` | Docker's Debian key URL | Docker's apt signing key. |
 | `dev_stack_docker_repo_uri` | Docker's Debian repo URI | Docker's apt repository. |
 | `dev_stack_docker_packages` | `docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin` | Docker packages. |
+| `dev_stack_podman_packages` | `podman`, `podman-docker`, `slirp4netns`, `uidmap` | Packages for the `podman` runtime. |
 | `dev_stack_install_devpod` | `true` | Install the DevPod CLI. |
 | `dev_stack_devpod_version` | `latest` | Pin a release tag (e.g. `v0.6.15`) for reproducibility. |
 | `dev_stack_devpod_url` | derived from the version | Download URL of the DevPod binary. |

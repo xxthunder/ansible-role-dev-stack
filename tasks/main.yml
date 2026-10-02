@@ -54,7 +54,7 @@
 
 # --- Docker (DevPod runtime) -------------------------------------------------
 - name: Install Docker Engine
-  when: dev_stack_install_docker | bool
+  when: dev_stack_container_runtime == 'docker'
   # On a fresh host --check cannot preview this block: the apt repo is not
   # actually written in check mode, so docker-ce is unresolvable and the docker
   # group/service don't exist yet. Tolerate those check-only errors so the dry
@@ -131,6 +131,94 @@
   ansible.builtin.set_fact:
     dev_stack_user_home: "{{ ansible_facts['getent_passwd'][dev_stack_user][4] }}"
     dev_stack_user_uid: "{{ ansible_facts['getent_passwd'][dev_stack_user][1] }}"
+
+# --- Linger (the user manager without a login) ------------------------------
+- name: Enable linger so user services run without an active login
+  # Lets the systemd --user instance — and with it the persistent agent and the
+  # rootless podman socket — run headless, across reboots, with nobody logged in.
+  when: dev_stack_ssh_agent | bool or dev_stack_container_runtime == 'podman'
+  ansible.builtin.command:
+    cmd: "loginctl enable-linger {{ dev_stack_user }}"
+    creates: "/var/lib/systemd/linger/{{ dev_stack_user }}"
+
+# --- Podman (rootless DevPod runtime) ----------------------------------------
+- name: Install rootless Podman
+  when: dev_stack_container_runtime == 'podman'
+  block:
+    - name: Remove Docker, which cannot coexist with Podman
+      ansible.builtin.apt:
+        name: "{{ dev_stack_docker_packages + ['docker.io'] }}"
+        state: absent
+
+    - name: Install Podman and its rootless helpers
+      ansible.builtin.apt:
+        name: "{{ dev_stack_podman_packages }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install the unit that makes / a shared mount at boot
+      # Rootless Podman expects / to be shared. systemd makes it so on a normal
+      # host, where this changes nothing; where / comes up private, as on WSL or
+      # in a container, the unit makes the difference.
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/dev-stack-shared-root.service
+        mode: "0644"
+        content: |
+          # Managed by the dev-stack Ansible role. Do not edit by hand.
+          [Unit]
+          Description=Make / a shared mount, as rootless Podman expects
+          DefaultDependencies=no
+          After=local-fs.target
+          Before=sysinit.target
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/bin/mount --make-rshared /
+
+          [Install]
+          WantedBy=sysinit.target
+
+    - name: Enable and start the shared-root unit
+      ansible.builtin.systemd_service:
+        name: dev-stack-shared-root.service
+        enabled: true
+        state: started
+        daemon_reload: true
+      # On a fresh host --check does not write the unit; tolerated in check mode only.
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: Enable and start the user's podman socket
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ dev_stack_user_uid }}"
+      ansible.builtin.systemd_service:
+        name: podman.socket
+        scope: user
+        enabled: true
+        state: started
+      # On a fresh host --check simulates the install; tolerated in check mode only.
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: Point DOCKER_HOST at the user's podman socket in the login profiles
+      # ~/.profile for bash and sh login shells, ~/.zprofile for zsh, which does
+      # not read ~/.profile.
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      ansible.builtin.blockinfile:
+        path: "{{ dev_stack_user_home }}/{{ item }}"
+        marker: "# {mark} dev-stack podman"
+        create: true
+        mode: "0644"
+        block: |
+          export XDG_RUNTIME_DIR=/run/user/$(id -u)
+          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+          export DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock
+      loop:
+        - .profile
+        - .zprofile
 
 # --- Shell (zsh + oh-my-zsh) -------------------------------------------------
 - name: Install and configure the operator's shell
@@ -213,13 +301,6 @@
         dest: "{{ dev_stack_user_home }}/.config/systemd/user/ssh-agent.service.d/10-forge-key.conf"
         mode: "0644"
       notify: Restart user ssh-agent
-
-    - name: Enable linger so the user agent runs without an active login
-      # Lets the systemd --user instance (and the agent) run headless, across
-      # reboots, with nobody logged in — essential for Remote-Control workflows.
-      ansible.builtin.command:
-        cmd: "loginctl enable-linger {{ dev_stack_user }}"
-        creates: "/var/lib/systemd/linger/{{ dev_stack_user }}"
 
     - name: Enable and start the stock ssh-agent socket and service
       # Socket: binds %t/openssh_agent and exports SSH_AUTH_SOCK. Service: the

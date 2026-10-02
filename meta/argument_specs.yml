@@ -19,9 +19,17 @@ argument_specs:
       dev_stack_qemu_guest_agent:
         type: bool
         description: Install and start qemu-guest-agent; only on a QEMU/Proxmox VM.
+      dev_stack_container_runtime:
+        type: str
+        choices: [docker, podman, none]
+        description: Container runtime for DevPod; docker by default, podman runs rootless.
       dev_stack_install_docker:
         type: bool
-        description: Install Docker Engine from Docker's apt repository.
+        description: Deprecated; false means dev_stack_container_runtime none.
+      dev_stack_podman_packages:
+        type: list
+        elements: str
+        description: Podman packages for the podman runtime, including the docker shim.
       dev_stack_docker_gpg_url:
         type: str
         description: URL of Docker's apt signing key.
