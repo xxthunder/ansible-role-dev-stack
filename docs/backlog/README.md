@@ -19,10 +19,10 @@
 
 ### In Progress
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
-- [ARDS-004a — The first run on a fresh host fails: the user manager is not up yet](ards-004a.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
 ### Done
+- [ARDS-004a — ✅ DONE - The first run on a fresh host fails: the user manager is not up yet](ards-004a.md)
 - [ARDS-002 — ✅ DONE - Initial public release](ards-002.md)
 
 ---

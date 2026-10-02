@@ -1,0 +1,31 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Look up the login user
+      ansible.builtin.getent:
+        database: passwd
+        key: vmuser
+
+    - name: Query the user's ssh-agent socket
+      become: true
+      become_user: vmuser
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.getent_passwd.vmuser[1] }}"
+      ansible.builtin.systemd_service:
+        name: ssh-agent.socket
+        scope: user
+      register: agent_socket
+
+    - name: Stat the linger flag
+      ansible.builtin.stat:
+        path: /var/lib/systemd/linger/vmuser
+      register: linger
+
+    - name: Assert linger and the persistent agent are up
+      ansible.builtin.assert:
+        that:
+          - linger.stat.exists
+          - agent_socket.status.ActiveState == 'active'
+        fail_msg: "linger={{ linger.stat.exists }} ssh-agent.socket={{ agent_socket.status.ActiveState }}"
