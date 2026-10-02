@@ -37,6 +37,11 @@ prerequisites. They belong to whoever creates the distro, not to this role.
 - **DevPod finds Podman through `podman-docker`**, which provides a `docker` command, so the
   default `docker` provider and every other tool that calls `docker` work unchanged
   (maintainer, 2026-10-02).
+- **The role makes `/` a shared mount**, which rootless Podman expects: a unit runs
+  `mount --make-rshared /` at every boot. systemd already does that on a normal host; where
+  `/` comes up private — WSL, containers — the unit makes the difference. The role still
+  detects no WSL and leaves `wsl.conf` alone; `systemd=true` stays with whoever creates the
+  distribution (maintainer, 2026-10-02).
 - **Tested on Debian 13 and Ubuntu 24.04**; the rest of the role on Ubuntu is
   [ARDS-005](ards-005.md).
 - **The reasoning goes into a "Container runtime" section of the README**, not an ADR: why
@@ -47,5 +52,6 @@ prerequisites. They belong to whoever creates the distro, not to this role.
 - [ ] With Podman selected, DevPod builds and runs a workspace in a WSL distro
 - [ ] A host with the defaults converges without changes
 - [ ] The test scenario covers the Podman path
+- [ ] With Podman selected, `/` is a shared mount, at every boot
 - [ ] The README has a "Container runtime" section with the reasoning
 - [ ] v1.1.0 is tagged
