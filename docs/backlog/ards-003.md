@@ -1,6 +1,6 @@
 # [ARDS-003] Podman as an alternative runtime, rootless
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
@@ -30,14 +30,14 @@ prerequisites. They belong to whoever creates the distro, not to this role.
 **Scope Decisions**:
 - **Docker stays the default.** A host that sets nothing converges as before.
 - **The role stays Linux-only** and knows nothing about WSL.
-
-**Open Questions**:
-- How is the runtime chosen — one variable (`dev_stack_container_runtime: docker|podman`) or
-  two switches?
-- Where is the runtime choice recorded — an ADR in this repository?
+- **One variable** chooses the runtime: `dev_stack_container_runtime` (maintainer, 2026-10-02).
+- **The reasoning goes into a "Container runtime" section of the README**, not an ADR: why
+  Docker is the default, why Podman runs rootless, why the two exclude each other. The
+  README is where someone choosing a runtime reads; an ADR would duplicate it.
 
 **Acceptance Criteria**:
 - [ ] With Podman selected, DevPod builds and runs a workspace in a WSL distro
 - [ ] A host with the defaults converges without changes
 - [ ] The test scenario covers the Podman path
-- [ ] A minor release is tagged
+- [ ] The README has a "Container runtime" section with the reasoning
+- [ ] A release is tagged

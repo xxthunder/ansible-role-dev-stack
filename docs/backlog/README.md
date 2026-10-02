@@ -15,10 +15,10 @@
 - [ARDS-004e — Downloads: amd64 only, no checksum for DevPod](ards-004e.md)
 - [ARDS-004f — `--check` is not exact on a provisioned host](ards-004f.md)
 - [ARDS-004g — `become_user` needs `acl` when connecting as another user](ards-004g.md)
-- [ARDS-003 — Podman as an alternative runtime, rootless](ards-003.md)
 
 ### In Progress
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
+- [ARDS-003 — Podman as an alternative runtime, rootless](ards-003.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
 ### Done
