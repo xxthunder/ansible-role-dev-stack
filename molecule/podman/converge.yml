@@ -1,0 +1,15 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    dev_stack_apt_upgrade: false
+    dev_stack_container_runtime: podman
+    dev_stack_install_devpod: false
+    dev_stack_ssh_agent: false
+    # On Ubuntu 24.04 sshd is socket-activated, so `sshd -t` lacks /run/sshd and
+    # the hardening drop-in fails to validate. Ubuntu support for the rest of
+    # the role is ARDS-005; this scenario tests the Podman path.
+    dev_stack_disable_password_auth: false
+  roles:
+    - role: dev-stack

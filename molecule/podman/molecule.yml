@@ -1,0 +1,30 @@
+---
+# Converge the role with rootless Podman as the container runtime, on Debian 13
+# and Ubuntu 24.04. The persistent agent and DevPod stay off; the agent
+# scenario covers the agent, and Ubuntu support for the rest of the role is a
+# separate item.
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: podman-debian13
+    image: geerlingguy/docker-debian13-ansible:latest
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+  - name: podman-ubuntu2404
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+provisioner:
+  name: ansible
+verifier:
+  name: ansible
