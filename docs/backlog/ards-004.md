@@ -21,6 +21,7 @@ unchanged on purpose. Each fix changes what runs, so each needs a failing test f
 - [ ] [ARDS-004e](ards-004e.md) — downloads: amd64 only, no checksum for DevPod
 - [ ] [ARDS-004f](ards-004f.md) — `--check` is not exact on a provisioned host
 - [ ] [ARDS-004g](ards-004g.md) — `become_user` needs `acl` when connecting as another user
+- [ ] [ARDS-004h](ards-004h.md) — the Docker path fails on a minimal host: `deb822_repository` needs `python3-debian`
 
 **Acceptance Criteria**:
 - [ ] All substories are Done

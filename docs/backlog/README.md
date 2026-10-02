@@ -16,6 +16,7 @@
 - [ARDS-004e — Downloads: amd64 only, no checksum for DevPod](ards-004e.md)
 - [ARDS-004f — `--check` is not exact on a provisioned host](ards-004f.md)
 - [ARDS-004g — `become_user` needs `acl` when connecting as another user](ards-004g.md)
+- [ARDS-004h — The Docker path fails on a minimal host: `deb822_repository` needs `python3-debian`](ards-004h.md)
 
 ### In Progress
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
