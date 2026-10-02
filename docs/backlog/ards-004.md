@@ -33,9 +33,13 @@ the test scenario or the shell tests.
 7. **No checksum for the DevPod download** — a binary from `latest`, installed as root.
 8. **`become_user` without `acl`** — untested when Ansible connects as a non-root user other
    than `dev_stack_user`.
+9. **`get_url` reports `changed` in check mode** — "Add the Docker apt signing key" shows
+   `changed` under `--check` on a provisioned host although the key on disk is identical to
+   the download. Together with finding 6 this contradicts the README's claim that later
+   `--check` runs are exact.
 
 **Acceptance Criteria**:
 - [ ] Finding 1 fixed with a test that failed first; a first run on a fresh host succeeds
 - [ ] Findings 2 and 3 fixed with tests that failed first
-- [ ] Findings 4 to 8 each fixed or recorded as a decision in the README
+- [ ] Findings 4 to 9 each fixed or recorded as a decision in the README
 - [ ] A release is tagged

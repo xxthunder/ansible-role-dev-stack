@@ -13,10 +13,10 @@
 - [ARDS-003 — Podman as an alternative runtime, rootless](ards-003.md)
 
 ### In Progress
-- [ARDS-002 — Initial public release](ards-002.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
 ### Done
+- [ARDS-002 — ✅ DONE - Initial public release](ards-002.md)
 
 ---
 

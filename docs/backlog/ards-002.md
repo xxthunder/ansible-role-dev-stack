@@ -1,6 +1,6 @@
-# [ARDS-002] Initial public release
+# [ARDS-002] ✅ DONE - Initial public release
 
-**Status**: In Progress
+**Status**: Done (2026-10-02)
 **Priority**: High
 **Component**: the whole role; `.github/workflows/test.yml`; `molecule/default/`; `tests/`
 **Related**: HSH-086a in the first consuming project — it swaps its inline copy of the role
@@ -47,8 +47,8 @@ The remaining findings of that review change behaviour and are [ARDS-004](ards-0
   same commit.
 
 **Acceptance Criteria**:
-- [ ] The repository is public and carries no private details of the consuming project
-- [ ] CI on `main` is green: ansible-lint, the shell tests, Molecule with idempotence
-- [ ] `v1.0.0-rc1` is tagged
-- [ ] The consumer's check run on its dev VM shows no unexpected change (HSH-086a)
-- [ ] `v1.0.0` is tagged at the same commit
+- [x] The repository is public and carries no private details of the consuming project
+- [x] CI on `main` is green: ansible-lint, the shell tests, Molecule with idempotence
+- [x] `v1.0.0-rc1` is tagged
+- [x] The consumer's check run on its dev VM shows no unexpected change (HSH-086a)
+- [x] `v1.0.0` is tagged at the same commit
