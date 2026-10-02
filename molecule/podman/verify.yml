@@ -26,6 +26,11 @@
         src: "{{ ansible_facts.getent_passwd.vmuser[4] }}/.profile"
       register: profile
 
+    - name: Read the user's ~/.zprofile (zsh does not read ~/.profile)
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts.getent_passwd.vmuser[4] }}/.zprofile"
+      register: zprofile
+
     - name: Read the mount propagation of /
       ansible.builtin.command: findmnt --noheadings --output PROPAGATION /
       register: root_propagation
@@ -51,3 +56,4 @@
           - podman_socket.status.ActiveState == 'active'
           - "'DOCKER_HOST=unix:///run/user/' in (profile.content | b64decode)"
           - "'/podman/podman.sock' in (profile.content | b64decode)"
+          - "'/podman/podman.sock' in (zprofile.content | b64decode)"

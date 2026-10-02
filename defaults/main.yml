@@ -32,8 +32,14 @@ dev_stack_base_packages:
 # a QEMU/Proxmox host. Only meaningful on a VM, so off by default.
 dev_stack_qemu_guest_agent: false
 
-# --- Docker (DevPod runtime) -------------------------------------------------
+# --- Container runtime (DevPod) ----------------------------------------------
+# docker (default), podman (rootless) or none — the README section "Container
+# runtime" says why. dev_stack_install_docker is its deprecated predecessor:
+# false still means "none".
 dev_stack_install_docker: true
+dev_stack_container_runtime: "{{ 'docker' if dev_stack_install_docker | bool else 'none' }}"
+
+# --- Docker -------------------------------------------------------------------
 # Docker's own apt repo for Debian. The signing key is fetched to a keyring and
 # referenced via signed_by, so no key lands in the global trust store.
 dev_stack_docker_gpg_url: "https://download.docker.com/linux/debian/gpg"
@@ -44,6 +50,16 @@ dev_stack_docker_packages:
   - containerd.io
   - docker-buildx-plugin
   - docker-compose-plugin
+
+# --- Podman (rootless) ------------------------------------------------------
+# podman-docker provides a `docker` command, so DevPod's default docker provider
+# and every other tool that calls `docker` work unchanged. slirp4netns and uidmap
+# are the rootless helpers.
+dev_stack_podman_packages:
+  - podman
+  - podman-docker
+  - slirp4netns
+  - uidmap
 
 # --- DevPod CLI --------------------------------------------------------------
 dev_stack_install_devpod: true
