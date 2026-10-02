@@ -20,11 +20,11 @@
 
 ### In Progress
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
-- [ARDS-003 — Podman as an alternative runtime, rootless](ards-003.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
 ### Done
 - [ARDS-004a — ✅ DONE - The first run on a fresh host fails: the user manager is not up yet](ards-004a.md)
+- [ARDS-003 — ✅ DONE - Podman as an alternative runtime, rootless](ards-003.md)
 - [ARDS-002 — ✅ DONE - Initial public release](ards-002.md)
 
 ---

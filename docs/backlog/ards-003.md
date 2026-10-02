@@ -1,6 +1,6 @@
-# [ARDS-003] Podman as an alternative runtime, rootless
+# [ARDS-003] ✅ DONE - Podman as an alternative runtime, rootless
 
-**Status**: In Progress
+**Status**: Done (2026-10-02)
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
@@ -24,8 +24,9 @@ Rootless Podman, the way the WSL tooling does it:
 - export `DOCKER_HOST=unix:///run/user/<uid>/podman/podman.sock`, so DevPod's `docker`
   driver talks to Podman
 
-On WSL, `systemd=true` and the boot command `mount --make-rshared /` in `/etc/wsl.conf` are
-prerequisites. They belong to whoever creates the distro, not to this role.
+On WSL, `systemd=true` in `/etc/wsl.conf` is a prerequisite and belongs to whoever creates
+the distro. The WSL tooling also sets the boot command `mount --make-rshared /` there; the
+role makes `/` shared itself (Scope Decisions).
 
 **Scope Decisions**:
 - **Docker stays the default.** A host that sets nothing converges as before.
@@ -49,9 +50,9 @@ prerequisites. They belong to whoever creates the distro, not to this role.
   README is where someone choosing a runtime reads; an ADR would duplicate it.
 
 **Acceptance Criteria**:
-- [ ] With Podman selected, DevPod builds and runs a workspace in a WSL distro
-- [ ] A host with the defaults converges without changes
-- [ ] The test scenario covers the Podman path
-- [ ] With Podman selected, `/` is a shared mount, at every boot
-- [ ] The README has a "Container runtime" section with the reasoning
-- [ ] v1.1.0 is tagged
+- [x] With Podman selected, DevPod builds and runs a workspace in a WSL distro
+- [x] A host with the defaults converges without changes
+- [x] The test scenario covers the Podman path
+- [x] With Podman selected, `/` is a shared mount, at every boot
+- [x] The README has a "Container runtime" section with the reasoning
+- [x] v1.1.0 is tagged
