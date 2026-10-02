@@ -1,0 +1,67 @@
+---
+# Role argument spec for dev-stack. All variables carry defaults in
+# defaults/main.yml; this file documents type and purpose only, so the two
+# files cannot drift on values. Requires ansible-core >= 2.11.
+argument_specs:
+  main:
+    short_description: Host software stack for a headless DevPod dev host.
+    options:
+      dev_stack_user:
+        type: str
+        description: Login user the stack is installed for (docker group, shell, agent).
+      dev_stack_apt_upgrade:
+        type: bool
+        description: Run an apt dist-upgrade first.
+      dev_stack_base_packages:
+        type: list
+        elements: str
+        description: Base packages installed on every host.
+      dev_stack_qemu_guest_agent:
+        type: bool
+        description: Install and start qemu-guest-agent; only on a QEMU/Proxmox VM.
+      dev_stack_install_docker:
+        type: bool
+        description: Install Docker Engine from Docker's apt repository.
+      dev_stack_docker_gpg_url:
+        type: str
+        description: URL of Docker's apt signing key.
+      dev_stack_docker_repo_uri:
+        type: str
+        description: URI of Docker's apt repository.
+      dev_stack_docker_packages:
+        type: list
+        elements: str
+        description: Docker packages to install.
+      dev_stack_install_devpod:
+        type: bool
+        description: Install the DevPod CLI.
+      dev_stack_devpod_version:
+        type: str
+        description: DevPod release tag, or "latest".
+      dev_stack_devpod_url:
+        type: str
+        description: Download URL of the DevPod binary; derived from the version.
+      dev_stack_devpod_path:
+        type: str
+        description: Where the DevPod binary is installed.
+      dev_stack_install_zsh:
+        type: bool
+        description: Install zsh and oh-my-zsh for the user.
+      dev_stack_set_user_shell:
+        type: bool
+        description: Make zsh the user's login shell.
+      dev_stack_ohmyzsh_repo:
+        type: str
+        description: Git URL of oh-my-zsh.
+      dev_stack_ssh_agent:
+        type: bool
+        description: Run a persistent user ssh-agent holding the forge-only key.
+      dev_stack_ssh_agent_key:
+        type: str
+        description: Forge-only private key, relative to the user's home.
+      dev_stack_ssh_agent_sock:
+        type: str
+        description: Basename of the stock agent socket under XDG_RUNTIME_DIR.
+      dev_stack_disable_password_auth:
+        type: bool
+        description: Enforce key-only SSH with an sshd_config.d drop-in.

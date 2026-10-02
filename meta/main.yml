@@ -1,0 +1,24 @@
+---
+galaxy_info:
+  role_name: dev_stack
+  namespace: xxthunder
+  author: xxthunder
+  description: >-
+    Host software stack for a headless Linux dev host that runs DevPod
+    workspaces: Docker, the DevPod CLI, zsh with oh-my-zsh, tmux, key-only
+    SSH and a persistent ssh-agent for a forge-only git identity.
+  company: xxthunder
+  license: MIT
+  # deb822_repository needs ansible-core 2.15.
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+  galaxy_tags:
+    - devpod
+    - docker
+    - devcontainer
+    - zsh
+    - ssh
+dependencies: []
