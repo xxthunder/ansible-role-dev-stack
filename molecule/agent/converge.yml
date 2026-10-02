@@ -1,0 +1,11 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    dev_stack_apt_upgrade: false
+    dev_stack_install_docker: false
+    dev_stack_install_devpod: false
+    dev_stack_ssh_agent: true
+  roles:
+    - role: dev-stack

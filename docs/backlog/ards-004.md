@@ -14,7 +14,7 @@ All of these behaved the same on the original host; [ARDS-002](ards-002.md) kept
 unchanged on purpose. Each fix changes what runs, so each needs a failing test first.
 
 **Substories**:
-- [ ] [ARDS-004a](ards-004a.md) — the first run on a fresh host fails: the user manager is not up yet
+- [x] [ARDS-004a](ards-004a.md) — the first run on a fresh host fails: the user manager is not up yet
 - [ ] [ARDS-004b](ards-004b.md) — a mistyped `dev_stack_user` is created instead of failing
 - [ ] [ARDS-004c](ards-004c.md) — a hanging agent socket blocks every zsh
 - [ ] [ARDS-004d](ards-004d.md) — the role replaces an existing `~/.zshenv`

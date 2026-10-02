@@ -1,0 +1,27 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  tasks:
+    - name: Install what a Debian 13 cloud image brings for logind, the user bus and sshd
+      # dbus-user-session moves systemctl --user onto /run/user/<uid>/bus,
+      # which exists only once user@<uid>.service is up.
+      ansible.builtin.apt:
+        name:
+          - dbus
+          - dbus-user-session
+          - libpam-systemd
+          - openssh-server
+        state: present
+        update_cache: true
+
+    - name: Start dbus so loginctl can reach logind
+      ansible.builtin.systemd_service:
+        name: dbus
+        state: started
+
+    - name: Create the login user, who never logs in
+      ansible.builtin.user:
+        name: vmuser
+        create_home: true
+        shell: /bin/bash

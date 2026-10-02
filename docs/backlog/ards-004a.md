@@ -1,6 +1,6 @@
-# [ARDS-004a] The first run on a fresh host fails: the user manager is not up yet
+# [ARDS-004a] ✅ DONE - The first run on a fresh host fails: the user manager is not up yet
 
-**Status**: In Progress
+**Status**: Done (2026-10-02)
 **Priority**: High
 **Component**: `tasks/main.yml` (persistent ssh-agent block), test scenario
 
@@ -18,8 +18,23 @@ Every fresh VM and WSL distro hits this, and the bootstrap repo
 
 The test scenario switches the persistent agent off, so CI never reaches this path.
 
+**Investigation (2026-10-02)**:
+The suspected race did not reproduce. A second test scenario, `agent`, converges the role
+with `dev_stack_ssh_agent: true` for a user that never logged in, in a systemd Debian 13
+container — first with `dbus` only, then with `dbus-user-session` and `libpam-systemd` as on
+a Debian 13 cloud image, where `systemctl --user` goes through `/run/user/<uid>/bus`. Both
+times linger, the user manager and `ssh-agent.socket` came up on the first run, and the
+idempotence run reported no change. In practice the case is rarer still: when Ansible
+connects as `dev_stack_user`, that SSH login has already started the user manager.
+
+**Scope Decisions**:
+- **No fix without a failing test.** The role stays unchanged.
+- **The `agent` scenario stays** as CI coverage of the persistent agent on a fresh host,
+  which the default scenario switches off. If the race shows up on a real host, that
+  scenario is where to reproduce it.
+
 **Acceptance Criteria**:
-- [ ] A test scenario converges with `dev_stack_ssh_agent: true` for a user that never
-      logged in, and failed before the fix
-- [ ] After the fix it converges on the first run and is idempotent
-- [ ] A host where the user manager already runs converges without a change
+- [x] A test scenario converges with `dev_stack_ssh_agent: true` for a user that never
+      logged in
+- [x] It converges on the first run and is idempotent
+- [x] The suspected race is reproduced and fixed, or the item records why not

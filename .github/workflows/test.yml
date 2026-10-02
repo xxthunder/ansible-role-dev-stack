@@ -64,7 +64,7 @@ jobs:
       - name: Install test dependencies
         run: pip3 install ansible-core "molecule-plugins[docker]" docker
       - name: Run Molecule tests
-        run: molecule test
+        run: molecule test --all
         env:
           ANSIBLE_ROLES_PATH: ${{ github.workspace }}
           ANSIBLE_FORCE_COLOR: "1"
