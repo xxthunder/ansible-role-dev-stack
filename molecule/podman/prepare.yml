@@ -1,0 +1,25 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  tasks:
+    - name: Install what a cloud image brings for logind, the user bus and sshd
+      ansible.builtin.apt:
+        name:
+          - dbus
+          - dbus-user-session
+          - libpam-systemd
+          - openssh-server
+        state: present
+        update_cache: true
+
+    - name: Start dbus so loginctl can reach logind
+      ansible.builtin.systemd_service:
+        name: dbus
+        state: started
+
+    - name: Create the login user
+      ansible.builtin.user:
+        name: vmuser
+        create_home: true
+        shell: /bin/bash

@@ -1,0 +1,53 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+
+    - name: Look up the login user
+      ansible.builtin.getent:
+        database: passwd
+        key: vmuser
+
+    - name: Query the user's podman socket
+      become: true
+      become_user: vmuser
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.getent_passwd.vmuser[1] }}"
+      ansible.builtin.systemd_service:
+        name: podman.socket
+        scope: user
+      register: podman_socket
+
+    - name: Read the user's ~/.profile
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts.getent_passwd.vmuser[4] }}/.profile"
+      register: profile
+
+    - name: Read the mount propagation of /
+      ansible.builtin.command: findmnt --noheadings --output PROPAGATION /
+      register: root_propagation
+      changed_when: false
+
+    - name: Query the unit that makes / shared at boot
+      ansible.builtin.systemd_service:
+        name: dev-stack-shared-root.service
+      register: shared_root_unit
+
+    - name: Assert / is a shared mount, as rootless Podman expects, at every boot
+      ansible.builtin.assert:
+        that:
+          - root_propagation.stdout | trim == 'shared'
+          - shared_root_unit.status.UnitFileState == 'enabled'
+
+    - name: Assert rootless Podman replaces Docker
+      ansible.builtin.assert:
+        that:
+          - "'podman' in ansible_facts.packages"
+          - "'podman-docker' in ansible_facts.packages"
+          - "'docker-ce' not in ansible_facts.packages"
+          - podman_socket.status.ActiveState == 'active'
+          - "'DOCKER_HOST=unix:///run/user/' in (profile.content | b64decode)"
+          - "'/podman/podman.sock' in (profile.content | b64decode)"
