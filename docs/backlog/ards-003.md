@@ -30,7 +30,15 @@ prerequisites. They belong to whoever creates the distro, not to this role.
 **Scope Decisions**:
 - **Docker stays the default.** A host that sets nothing converges as before.
 - **The role stays Linux-only** and knows nothing about WSL.
-- **One variable** chooses the runtime: `dev_stack_container_runtime` (maintainer, 2026-10-02).
+- **One variable** chooses the runtime: `dev_stack_container_runtime` — `docker` (default),
+  `podman` or `none` (maintainer, 2026-10-02).
+- **`dev_stack_install_docker` stays as a deprecated alias**, so this is a minor release,
+  v1.1.0 (maintainer, 2026-10-02): `false` means runtime `none`.
+- **DevPod finds Podman through `podman-docker`**, which provides a `docker` command, so the
+  default `docker` provider and every other tool that calls `docker` work unchanged
+  (maintainer, 2026-10-02).
+- **Tested on Debian 13 and Ubuntu 24.04**; the rest of the role on Ubuntu is
+  [ARDS-005](ards-005.md).
 - **The reasoning goes into a "Container runtime" section of the README**, not an ADR: why
   Docker is the default, why Podman runs rootless, why the two exclude each other. The
   README is where someone choosing a runtime reads; an ADR would duplicate it.
@@ -40,4 +48,4 @@ prerequisites. They belong to whoever creates the distro, not to this role.
 - [ ] A host with the defaults converges without changes
 - [ ] The test scenario covers the Podman path
 - [ ] The README has a "Container runtime" section with the reasoning
-- [ ] A release is tagged
+- [ ] v1.1.0 is tagged

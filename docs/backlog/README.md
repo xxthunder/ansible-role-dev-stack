@@ -9,6 +9,7 @@
 ## Table of Contents
 
 ### Open
+- [ARDS-005 — Ubuntu 24.04 support](ards-005.md)
 - [ARDS-004b — A mistyped `dev_stack_user` is created instead of failing](ards-004b.md)
 - [ARDS-004c — A hanging agent socket blocks every zsh](ards-004c.md)
 - [ARDS-004d — The role replaces an existing `~/.zshenv`](ards-004d.md)
