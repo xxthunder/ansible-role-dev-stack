@@ -1,0 +1,37 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+
+    - name: Stat the DevPod binary
+      ansible.builtin.stat:
+        path: /usr/local/bin/devpod
+      register: devpod_bin
+
+    - name: Read the sshd hardening drop-in
+      ansible.builtin.slurp:
+        src: /etc/ssh/sshd_config.d/10-dev-stack-hardening.conf
+      register: sshd_dropin
+
+    - name: Look up the login user
+      ansible.builtin.getent:
+        database: passwd
+        key: vmuser
+
+    - name: Assert the stack is in place
+      ansible.builtin.assert:
+        that:
+          - "'tmux' in ansible_facts.packages"
+          - "'zsh' in ansible_facts.packages"
+          - devpod_bin.stat.exists and devpod_bin.stat.executable
+          - "'PasswordAuthentication no' in (sshd_dropin.content | b64decode)"
+          - ansible_facts.getent_passwd.vmuser[5] == '/usr/bin/zsh'
+
+    - name: Assert qemu-guest-agent is not installed by default
+      ansible.builtin.assert:
+        that:
+          - "'qemu-guest-agent' not in ansible_facts.packages"
+        fail_msg: qemu-guest-agent is a VM concern; the role must not install it unless asked.

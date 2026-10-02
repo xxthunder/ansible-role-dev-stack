@@ -1,0 +1,18 @@
+---
+# yamllint config for the standalone dev-stack role. Relaxed style;
+# line-length is disabled because some URLs and shell lines in tasks are
+# unavoidably long and don't benefit from wrapping.
+extends: default
+
+rules:
+  braces:
+    max-spaces-inside: 1
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: disable
+  document-start: disable
+  line-length: disable
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+  truthy: disable

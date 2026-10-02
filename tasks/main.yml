@@ -1,0 +1,331 @@
+---
+# dev-stack — host software stack for a headless Linux dev host that runs
+# DevPod workspaces. Deliberately thin: the host is a container host for DevPod.
+# Project toolchains live INSIDE each workspace's .devcontainer, not on the host.
+# The host adds tmux as the session-persistence layer — one place, not
+# per-devcontainer. So this installs: apt upgrade, tmux, Docker (the DevPod
+# runtime), the DevPod CLI, and qemu-guest-agent on request. It also sets up
+# the operator's shell (zsh + oh-my-zsh) and a persistent user ssh-agent holding
+# the forge-only git identity, wired so headless workspaces get a git key while
+# `ssh -A` keeps the personal key the only path to the operator's other servers
+# (the two-identity model — see defaults/main.yml).
+#
+# Runs ON the guest with become. Idempotent; behaves under --check on a host
+# where the Docker apt repo already exists. NOTE: on a *fresh* host, --check
+# cannot fully preview the Docker step — the repo add is previewed but not
+# applied, so the docker-ce install has nothing to resolve against. The Docker
+# block and the qemu-guest-agent service tolerate those check-only errors so the
+# dry run completes; apply (and provisioned-host --check) is exact.
+
+- name: Update apt cache and upgrade all packages
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+    upgrade: dist
+  when: dev_stack_apt_upgrade | bool
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ dev_stack_base_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install and start qemu-guest-agent
+  # Reports the guest IP/heartbeat to a QEMU/Proxmox host. Only meaningful on a
+  # VM, so it runs only when dev_stack_qemu_guest_agent asks for it.
+  when: dev_stack_qemu_guest_agent | bool
+  block:
+    - name: Install qemu-guest-agent
+      ansible.builtin.apt:
+        name: qemu-guest-agent
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Enable and start qemu-guest-agent
+      # On a fresh host --check simulates the install, so the unit does not
+      # exist yet; tolerated in check mode only.
+      ansible.builtin.systemd_service:
+        name: qemu-guest-agent
+        enabled: true
+        state: started
+      ignore_errors: "{{ ansible_check_mode }}"
+
+# --- Docker (DevPod runtime) -------------------------------------------------
+- name: Install Docker Engine
+  when: dev_stack_install_docker | bool
+  # On a fresh host --check cannot preview this block: the apt repo is not
+  # actually written in check mode, so docker-ce is unresolvable and the docker
+  # group/service don't exist yet. Tolerate those check-only errors so the dry
+  # run completes; a real apply (or a --check re-run once provisioned) is exact.
+  ignore_errors: "{{ ansible_check_mode }}"
+  block:
+
+    - name: Ensure the apt keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Add the Docker apt signing key
+      ansible.builtin.get_url:
+        url: "{{ dev_stack_docker_gpg_url }}"
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Add the Docker apt repository
+      # deb822 .sources file referencing the keyring via signed_by — no key in
+      # the global trust store. suites tracks the guest's Debian release.
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: [deb]
+        uris: "{{ dev_stack_docker_repo_uri }}"
+        suites: ["{{ ansible_facts['distribution_release'] }}"]
+        components: [stable]
+        architectures: [amd64]
+        signed_by: /etc/apt/keyrings/docker.asc
+        state: present
+        enabled: true
+
+    - name: Install Docker packages
+      ansible.builtin.apt:
+        name: "{{ dev_stack_docker_packages }}"
+        state: present
+        update_cache: true
+
+    - name: Add the login user to the docker group
+      # Lets DevPod and the user drive Docker without sudo. A change only takes
+      # effect on the user's next login/session.
+      ansible.builtin.user:
+        name: "{{ dev_stack_user }}"
+        groups: docker
+        append: true
+
+    - name: Enable and start Docker
+      ansible.builtin.systemd_service:
+        name: docker
+        enabled: true
+        state: started
+
+# --- DevPod CLI --------------------------------------------------------------
+- name: Install the DevPod CLI
+  # Single static binary. With dev_stack_devpod_version "latest" this is fetched
+  # once and not re-fetched while the file exists (see the defaults note).
+  ansible.builtin.get_url:
+    url: "{{ dev_stack_devpod_url }}"
+    dest: "{{ dev_stack_devpod_path }}"
+    mode: "0755"
+  when: dev_stack_install_devpod | bool
+
+# --- Account facts (home + uid, used by the shell and agent tasks) -----------
+- name: Resolve the dev user's account details
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ dev_stack_user }}"
+
+- name: Record the dev user's home and uid
+  # Read getent's result via ansible_facts[...] rather than the auto-injected
+  # top-level `getent_passwd` var (INJECT_FACTS_AS_VARS is deprecated). Fields
+  # are the passwd columns: [4] = home, [1] = uid.
+  ansible.builtin.set_fact:
+    dev_stack_user_home: "{{ ansible_facts['getent_passwd'][dev_stack_user][4] }}"
+    dev_stack_user_uid: "{{ ansible_facts['getent_passwd'][dev_stack_user][1] }}"
+
+# --- Shell (zsh + oh-my-zsh) -------------------------------------------------
+- name: Install and configure the operator's shell
+  when: dev_stack_install_zsh | bool
+  block:
+
+    - name: Install zsh and git
+      # git is needed to clone oh-my-zsh (and is generally expected on a dev box).
+      ansible.builtin.apt:
+        name:
+          - zsh
+          - git
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install oh-my-zsh for the dev user
+      # Shallow clone of the framework; no network churn on re-run (update: false).
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      ansible.builtin.git:
+        repo: "{{ dev_stack_ohmyzsh_repo }}"
+        dest: "{{ dev_stack_user_home }}/.oh-my-zsh"
+        version: master
+        depth: 1
+        update: false
+
+    - name: Seed .zshrc from the oh-my-zsh template
+      # force: false — never clobber a .zshrc the operator has since customised.
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      ansible.builtin.copy:
+        src: "{{ dev_stack_user_home }}/.oh-my-zsh/templates/zshrc.zsh-template"
+        dest: "{{ dev_stack_user_home }}/.zshrc"
+        remote_src: true
+        force: false
+        mode: "0644"
+
+    - name: Set the dev user's login shell to zsh
+      # Required for the ~/.zshenv agent hook to apply to `ssh <host> <cmd>`.
+      ansible.builtin.user:
+        name: "{{ dev_stack_user }}"
+        shell: /usr/bin/zsh
+      when: dev_stack_set_user_shell | bool
+
+# --- Persistent ssh-agent: the forge-only git identity ------------------------
+# Adopt the STOCK socket-activated agent (ssh-agent.socket + ssh-agent.service,
+# shipped by OpenSSH 10 in /usr/lib/systemd/user) rather than shipping our own
+# unit: a same-named custom unit collides with the stock socket — which forces
+# SSH_AUTH_SOCK=%t/openssh_agent into the user-manager environment — and leaves
+# that advertised socket hanging. We instead extend the stock service with a
+# drop-in (load the forge key + eager-start at boot) and enable both units.
+- name: Set up the persistent ssh-agent for the forge-only identity
+  when: dev_stack_ssh_agent | bool
+  block:
+
+    - name: Install the managed .zshenv (agent fallback for headless git)
+      # Points SSH_AUTH_SOCK at the stock agent only when nothing was forwarded —
+      # so `ssh -A` (personal key, for Ansible) still wins. See the template.
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      ansible.builtin.template:
+        src: zshenv.j2
+        dest: "{{ dev_stack_user_home }}/.zshenv"
+        mode: "0644"
+
+    - name: Ensure the ssh-agent.service drop-in directory exists
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      ansible.builtin.file:
+        path: "{{ dev_stack_user_home }}/.config/systemd/user/ssh-agent.service.d"
+        state: directory
+        mode: "0755"
+
+    - name: Install the forge-key drop-in for the stock ssh-agent service
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      ansible.builtin.template:
+        src: ssh-agent-forge-key.conf.j2
+        dest: "{{ dev_stack_user_home }}/.config/systemd/user/ssh-agent.service.d/10-forge-key.conf"
+        mode: "0644"
+      notify: Restart user ssh-agent
+
+    - name: Enable linger so the user agent runs without an active login
+      # Lets the systemd --user instance (and the agent) run headless, across
+      # reboots, with nobody logged in — essential for Remote-Control workflows.
+      ansible.builtin.command:
+        cmd: "loginctl enable-linger {{ dev_stack_user }}"
+        creates: "/var/lib/systemd/linger/{{ dev_stack_user }}"
+
+    - name: Enable and start the stock ssh-agent socket and service
+      # Socket: binds %t/openssh_agent and exports SSH_AUTH_SOCK. Service: the
+      # agent itself, eager-started at boot via the drop-in's [Install] so the
+      # forge key is resident before the first client connects. The stock service
+      # is After=/Requires=ssh-agent.socket, so eager start inherits the bound fd.
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ dev_stack_user_uid }}"
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        scope: user
+        enabled: true
+        state: started
+        daemon_reload: true
+      loop:
+        - ssh-agent.socket
+        - ssh-agent.service
+      # On a fresh host under --check the lingering user manager may not be up
+      # yet; tolerate it in check mode only (apply is exact).
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: Flush handlers so the agent restarts before we (re)load the key
+      ansible.builtin.meta: flush_handlers
+
+    - name: Check whether the forge-only key is present on the host
+      # The private key is delivered out-of-band (scp), not by this role.
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      ansible.builtin.stat:
+        path: "{{ dev_stack_user_home }}/{{ dev_stack_ssh_agent_key }}"
+      register: dev_stack_agent_key_stat
+
+    - name: Load the forge-only key into the agent if not already loaded
+      become: true
+      become_user: "{{ dev_stack_user }}"
+      environment:
+        SSH_AUTH_SOCK: "/run/user/{{ dev_stack_user_uid }}/{{ dev_stack_ssh_agent_sock }}"
+      # Converge the agent to EXACTLY the forge key.
+      #
+      # Presence alone is not enough. The agent is long-lived (linger), so keys
+      # ssh-add'ed into it stay resident indefinitely -- and it had accumulated
+      # the personal fleet identity, which silently gave every detached session
+      # fleet access the two-identity model says it must not have.
+      # Nothing noticed, because the old guard asked "is any identity loaded".
+      #
+      # Pruning is safe: SSH_AUTH_SOCK is pinned above to the host's persistent
+      # socket, so this can only ever clear the host's own agent -- never a
+      # forwarded one belonging to the operator's client.
+      ansible.builtin.shell: |
+        # --- agent-convergence begin (extracted verbatim by tests/) ---
+        set -uo pipefail
+        key="{{ dev_stack_user_home }}/{{ dev_stack_ssh_agent_key }}"
+        fp="$(ssh-keygen -lf "$key" | awk '{print $2}')"
+        # An empty fingerprint would count every loaded key as ours, so a
+        # foreign key would never be pruned: fail instead.
+        if [ -z "$fp" ]; then
+          echo "dev-stack: cannot fingerprint $key" >&2
+          exit 1
+        fi
+
+        # exit 1 = agent reachable but empty, 2 = unreachable; both mean "nothing
+        # loaded", so an empty listing is the right reading either way.
+        loaded="$(ssh-add -l 2>/dev/null)" || loaded=""
+
+        total=$(printf '%s\n' "$loaded" | grep -c 'SHA256:' || true)
+        mine=$(printf '%s\n' "$loaded" | grep -cF "$fp" || true)
+        foreign=$((total - mine))
+
+        # ssh-add reports on stderr; the marker on stdout is what changed_when
+        # reads.
+        if [ "$foreign" -gt 0 ]; then
+          ssh-add -D
+          ssh-add "$key"
+          echo "dev-stack: agent converged"
+        elif [ "$mine" -eq 0 ]; then
+          ssh-add "$key"
+          echo "dev-stack: agent converged"
+        fi
+        # --- agent-convergence end ---
+      args:
+        executable: /bin/bash
+      register: dev_stack_agent_add
+      changed_when: "'dev-stack: agent converged' in dev_stack_agent_add.stdout"
+      when: dev_stack_agent_key_stat.stat.exists
+      ignore_errors: "{{ ansible_check_mode }}"
+
+# --- sshd: key-only auth -----------------------------------------------------
+# Enforce key-only SSH via a sshd_config.d drop-in (Debian's sshd_config Includes
+# /etc/ssh/sshd_config.d/*.conf; the 10- prefix sorts ahead of cloud-init's
+# 50-cloud-init.conf, and sshd takes the first value, so this wins). No ufw — see
+# the defaults note.
+- name: Enforce key-only SSH (disable password auth)
+  when: dev_stack_disable_password_auth | bool
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/10-dev-stack-hardening.conf
+    content: |
+      # Managed by the dev-stack Ansible role (HSH-019). Do not edit by hand.
+      # Key-only SSH: keys are seeded via cloud-init and this box is reached
+      # key-only over the tailnet. The ufw/tailnet-only firewall from the
+      # original HSH-019 scope is intentionally out of scope (single-owner box).
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Reload sshd

@@ -1,0 +1,5 @@
+---
+# ansible-lint config for the standalone dev-stack role. The directory uses a
+# hyphen (dev-stack), which Galaxy allows but role-name flags.
+skip_list:
+  - role-name

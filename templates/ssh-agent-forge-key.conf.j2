@@ -1,0 +1,20 @@
+# Managed by the dev-stack Ansible role (HSH-019). Do not edit by hand.
+# Drop-in for the STOCK OpenSSH socket-activated user agent. Debian 13 /
+# OpenSSH 10 ship ssh-agent.socket + ssh-agent.service in /usr/lib/systemd/user;
+# the socket binds %t/{{ dev_stack_ssh_agent_sock }} and forces
+# SSH_AUTH_SOCK=%t/{{ dev_stack_ssh_agent_sock }} into the user-manager
+# environment. We extend that service rather than shipping our own (a same-named
+# unit collides with the socket and leaves the advertised socket hanging).
+[Service]
+# Load the forge-only key once the agent is up. Passphrase-less by design
+# (headless), so this is non-interactive; tolerate the key not yet being present
+# (it is delivered out-of-band — see the role README).
+ExecStartPost=/bin/sh -c 'SSH_AUTH_SOCK=%t/{{ dev_stack_ssh_agent_sock }} ssh-add %h/{{ dev_stack_ssh_agent_key }} 2>/dev/null || true'
+
+[Install]
+# Start eagerly at boot (in addition to lazy socket activation) so the key is
+# resident before the first client connects — otherwise the first connection
+# that socket-activates the agent races ExecStartPost and sees an empty agent.
+# The stock service is After=/Requires=ssh-agent.socket, so eager start still
+# inherits the bound socket fd (no boot race).
+WantedBy=default.target

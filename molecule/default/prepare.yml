@@ -1,0 +1,16 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  tasks:
+    - name: Install openssh-server so the sshd drop-in can be validated and reloaded
+      ansible.builtin.apt:
+        name: openssh-server
+        state: present
+        update_cache: true
+
+    - name: Create the login user the role installs for
+      ansible.builtin.user:
+        name: vmuser
+        create_home: true
+        shell: /bin/bash

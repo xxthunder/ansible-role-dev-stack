@@ -1,0 +1,25 @@
+---
+# Restart the stock user ssh-agent.service after its drop-in changes. Runs as
+# the dev user against their systemd --user instance (linger keeps it alive
+# without a login), so XDG_RUNTIME_DIR must point at the user's runtime dir. The
+# drop-in's ExecStartPost re-loads the forge-only key from disk on every
+# (re)start.
+- name: Restart user ssh-agent
+  become: true
+  become_user: "{{ dev_stack_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ dev_stack_user_uid }}"
+  ansible.builtin.systemd_service:
+    name: ssh-agent.service
+    scope: user
+    state: restarted
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"
+
+# Reload sshd after the key-only drop-in changes. ssh.service's ExecReload runs
+# `sshd -t` first, so a bad config fails the reload instead of dropping the
+# daemon — and a reload (not restart) never severs the live session applying it.
+- name: Reload sshd
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: reloaded

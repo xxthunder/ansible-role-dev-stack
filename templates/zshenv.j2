@@ -1,0 +1,33 @@
+# Managed by the dev-stack Ansible role. Do not edit by hand.
+#
+# Two-identity credential model. Which identity a session gets is decided on the
+# CLIENT, by whether it forwards an agent when connecting here:
+#
+#   * no forwarding  -> this file selects this host's persistent, linger-backed
+#                       agent holding the forge-only
+#                       {{ dev_stack_ssh_agent_key | basename }} key. It outlives
+#                       the client, so tmux sessions, `devpod ssh` and the
+#                       workspaces below them keep working after you detach.
+#   * ssh -A         -> your PERSONAL key, the only thing your other servers
+#                       trust, is used and left untouched.
+#
+# Nothing here re-points a shared path: two sessions with different intents must
+# not be able to steal each other's agent.
+#
+# Sourced on every zsh invocation, including the non-interactive `zsh -c` sshd
+# runs for `ssh <host> <cmd>` -- which is how `devpod ssh --stdio` reaches a
+# workspace.
+
+# Liveness, not existence. A collapsed forwarding tunnel routinely leaves the
+# socket FILE behind, so `-z` and `-S` both pass on a corpse -- that is exactly
+# how a stale forwarded socket once went unnoticed. Only exit 2 (cannot reach the agent) means dead;
+# exit 1 is an agent that answered and simply holds no keys yet, which is the
+# operator's own doing and fixes itself the moment they ssh-add.
+ssh-add -l >/dev/null 2>&1
+_dev_rc=$?
+if [ "$_dev_rc" -eq 2 ]; then
+  _dev_agent="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/{{ dev_stack_ssh_agent_sock }}"
+  [ -S "$_dev_agent" ] && export SSH_AUTH_SOCK="$_dev_agent"
+  unset _dev_agent
+fi
+unset _dev_rc

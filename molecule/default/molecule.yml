@@ -1,0 +1,23 @@
+---
+# Converge the role in a systemd-enabled Debian 13 container. Docker and the
+# persistent ssh-agent are switched off here: dockerd inside this container and
+# a lingering systemd --user instance are not what the role meets on a real
+# host. The agent logic is covered by tests/*.sh; Docker by the consumer's
+# check run on a real host.
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: geerlingguy/docker-debian13-ansible:latest
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

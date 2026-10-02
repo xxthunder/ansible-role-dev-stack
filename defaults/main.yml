@@ -1,0 +1,103 @@
+---
+# Defaults for the dev-stack role — the host software stack for a headless
+# Linux dev host that runs DevPod workspaces. Thin by design: the host is a
+# container host for DevPod. Project toolchains live inside each workspace's
+# .devcontainer, NOT on the host — so this role installs only Docker, the
+# DevPod CLI, tmux, qemu-guest-agent on request, the apt upgrade, the operator's shell
+# (zsh + oh-my-zsh), and a persistent ssh-agent holding the forge-only git
+# identity (the two-identity credential model — see below).
+#
+# Runtime is Docker (Docker over Podman for DevPod).
+
+# Login user the stack is installed for: docker group membership, login shell,
+# and the persistent ssh-agent.
+dev_stack_user: "vmuser"
+
+# --- apt upgrade -------------------------------------------------------------
+# A cloud image is only patched to its build date; bring the host current. Run
+# under --check first to preview which packages would change.
+dev_stack_apt_upgrade: true
+
+# Base packages. ca-certificates backs TLS for the Docker apt repo and the
+# DevPod download; tmux is the host-side session multiplexer that keeps
+# long-running sessions alive across disconnects — kept in ONE place (the host)
+# rather than baked into every devcontainer. Other dev tools belong in the
+# devcontainer, not here.
+dev_stack_base_packages:
+  - ca-certificates
+  - tmux
+
+# --- VM guest agent ------------------------------------------------------------
+# Install and start qemu-guest-agent, which reports the guest IP and heartbeat to
+# a QEMU/Proxmox host. Only meaningful on a VM, so off by default.
+dev_stack_qemu_guest_agent: false
+
+# --- Docker (DevPod runtime) -------------------------------------------------
+dev_stack_install_docker: true
+# Docker's own apt repo for Debian. The signing key is fetched to a keyring and
+# referenced via signed_by, so no key lands in the global trust store.
+dev_stack_docker_gpg_url: "https://download.docker.com/linux/debian/gpg"
+dev_stack_docker_repo_uri: "https://download.docker.com/linux/debian"
+dev_stack_docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# --- DevPod CLI --------------------------------------------------------------
+dev_stack_install_devpod: true
+# Pin a release tag (e.g. "v0.6.15") for reproducibility, or leave "latest".
+# NOTE: with "latest", a re-run does NOT upgrade an already-installed binary
+# (get_url skips when the file exists) — bump this var and re-run to upgrade.
+dev_stack_devpod_version: "latest"
+dev_stack_devpod_url: >-
+  {{ 'https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64'
+     if dev_stack_devpod_version == 'latest'
+     else 'https://github.com/loft-sh/devpod/releases/download/'
+          ~ dev_stack_devpod_version ~ '/devpod-linux-amd64' }}
+dev_stack_devpod_path: "/usr/local/bin/devpod"
+
+# --- Shell (zsh + oh-my-zsh) -------------------------------------------------
+# The operator's interactive shell on the host. zsh is also load-bearing for the
+# ssh-agent wiring below: zsh sources ~/.zshenv on EVERY invocation, including
+# the non-interactive `zsh -c` that sshd runs for `ssh <host> <cmd>` — which is
+# exactly how a client's `devpod ssh --stdio` proxy reaches a workspace. bash
+# does not source its rc in that path, so the agent fallback would not apply.
+dev_stack_install_zsh: true
+# Set dev_stack_user's login shell to zsh (required for the ~/.zshenv hook).
+dev_stack_set_user_shell: true
+dev_stack_ohmyzsh_repo: "https://github.com/ohmyzsh/ohmyzsh.git"
+
+# --- Persistent ssh-agent: the forge-only git identity ------------------------
+# Two-identity credential model: git auth and Ansible fleet auth are different
+# keys with different blast radius. This holds the *forge-only* key (registered
+# with GitHub + Gitea, NOT the fleet) in a persistent user ssh-agent, so `git`
+# works from headless/Remote-Control/unattended workspaces. DevPod forwards
+# whichever agent is in scope into the container; ~/.zshenv points at THIS agent
+# only when nothing was forwarded — so `ssh -A` with your personal key still
+# wins and is the only way to reach the fleet with Ansible. The private key is
+# delivered out-of-band (scp), NOT managed by this role or stored in the repo;
+# the agent loads it if present and tolerates its absence.
+#
+# We do NOT define our own agent unit. Debian 13 / OpenSSH 10 ship a
+# socket-activated user agent (ssh-agent.socket + ssh-agent.service in
+# /usr/lib/systemd/user); the socket forces SSH_AUTH_SOCK=%t/openssh_agent into
+# the user-manager environment. A same-named custom unit collides with it and
+# leaves connections to that advertised socket hanging. So we adopt the stock
+# units and extend the service with a drop-in (load the forge key + start
+# eagerly at boot). See tasks/main.yml and the drop-in template.
+dev_stack_ssh_agent: true
+# Path to the forge-only private key, relative to dev_stack_user's home.
+# Consumers usually set this.
+dev_stack_ssh_agent_key: ".ssh/id_ed25519_forge"
+# Basename of the stock socket-activated agent socket (under XDG_RUNTIME_DIR).
+# Set by ssh-agent.socket and referenced by ~/.zshenv, the drop-in, and the
+# load-key task. This is OpenSSH's own name — don't change it without reason.
+dev_stack_ssh_agent_sock: "openssh_agent"
+
+# --- sshd: key-only auth -----------------------------------------------------
+# Disable password + keyboard-interactive logins so SSH is key-only. The role
+# configures no host firewall: it targets a single-owner dev host that is
+# reached key-only, typically over a private network or VPN.
+dev_stack_disable_password_auth: true
