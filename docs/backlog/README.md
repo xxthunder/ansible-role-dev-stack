@@ -19,11 +19,11 @@
 - [ARDS-004b — A mistyped `dev_stack_user` is created instead of failing](ards-004b.md)
 
 ### In Progress
-- [ARDS-006 — Quiet the notice `podman-docker` prints on every `docker` call](ards-006.md)
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
 ### Done
+- [ARDS-006 — Quiet the notice `podman-docker` prints on every `docker` call](ards-006.md)
 - [ARDS-004a — The first run on a fresh host fails: the user manager is not up yet](ards-004a.md)
 - [ARDS-003 — Podman as an alternative runtime, rootless](ards-003.md)
 - [ARDS-002 — Initial public release](ards-002.md)

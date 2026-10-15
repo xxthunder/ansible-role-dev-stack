@@ -1,6 +1,6 @@
-# [ARDS-006] Quiet the notice `podman-docker` prints on every `docker` call
+# [ARDS-006] ✅ DONE - Quiet the notice `podman-docker` prints on every `docker` call
 
-**Status**: In Progress
+**Status**: Done (2026-10-15)
 **Priority**: Low
 **Component**: `tasks/main.yml` (Podman block), test scenario
 **Related**: [ARDS-003](ards-003.md)
@@ -15,5 +15,5 @@ The `docker` wrapper from `podman-docker` prints "Emulate Docker CLI using podma
 `ssh <workspace>.devpod`. The file `/etc/containers/nodocker` silences it.
 
 **Acceptance Criteria**:
-- [ ] With Podman selected, the role creates `/etc/containers/nodocker`
-- [ ] The test scenario asserts that `docker --version` prints no emulation notice
+- [x] With Podman selected, the role creates `/etc/containers/nodocker`
+- [x] The test scenario asserts that `docker --version` prints no emulation notice
