@@ -1,6 +1,6 @@
 # [ARDS-006] Quiet the notice `podman-docker` prints on every `docker` call
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: Low
 **Component**: `tasks/main.yml` (Podman block), test scenario
 **Related**: [ARDS-003](ards-003.md)
