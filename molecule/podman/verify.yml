@@ -41,6 +41,18 @@
         name: dev-stack-shared-root.service
       register: shared_root_unit
 
+    - name: Call docker, which podman-docker provides
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Assert docker prints its own output and no emulation notice
+      ansible.builtin.assert:
+        that:
+          - "'podman version' in docker_version.stdout"
+          - "'Emulate Docker CLI' not in docker_version.stdout"
+          - "'Emulate Docker CLI' not in docker_version.stderr"
+
     - name: Assert / is a shared mount, as rootless Podman expects, at every boot
       ansible.builtin.assert:
         that:
