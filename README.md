@@ -47,7 +47,7 @@ inside the devcontainers.
 | Value | What the role does |
 | --- | --- |
 | `docker` (default) | Docker Engine from Docker's apt repository; the user joins the `docker` group |
-| `podman` | rootless Podman: removes the Docker packages, installs `podman`, `podman-docker`, `slirp4netns` and `uidmap`, makes `/` a shared mount at boot, enables linger and the user's `podman.socket`, and exports `DOCKER_HOST` in `~/.profile` and `~/.zprofile` |
+| `podman` | rootless Podman: removes the Docker packages, installs `podman`, `podman-docker`, `slirp4netns` and `uidmap`, quiets `podman-docker`'s notice with `/etc/containers/nodocker`, makes `/` a shared mount at boot, enables linger and the user's `podman.socket`, and exports `DOCKER_HOST` in `~/.profile` and `~/.zprofile` |
 | `none` | no container runtime |
 
 Why it is set up this way:

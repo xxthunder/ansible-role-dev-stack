@@ -157,6 +157,17 @@
         update_cache: true
         cache_valid_time: 3600
 
+    - name: Quiet the notice podman-docker prints on every docker call
+      # The docker wrapper prints "Emulate Docker CLI using podman" unless this
+      # file exists; only its presence counts.
+      ansible.builtin.copy:
+        dest: /etc/containers/nodocker
+        content: ""
+        mode: "0644"
+      # On a fresh host --check simulates the install, so /etc/containers does
+      # not exist yet; tolerated in check mode only.
+      ignore_errors: "{{ ansible_check_mode }}"
+
     - name: Install the unit that makes / a shared mount at boot
       # Rootless Podman expects / to be shared. systemd makes it so on a normal
       # host, where this changes nothing; where / comes up private, as on WSL or
