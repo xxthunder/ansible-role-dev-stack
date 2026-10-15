@@ -1,5 +1,10 @@
 # dev-stack
 
+[![CI](https://github.com/xxthunder/ansible-role-dev-stack/actions/workflows/test.yml/badge.svg)](https://github.com/xxthunder/ansible-role-dev-stack/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Ansible](https://img.shields.io/badge/Ansible-2.15%2B-blue.svg)](https://docs.ansible.com/)
+[![ansible-lint](https://img.shields.io/badge/ansible--lint-passing-brightgreen.svg)](https://ansible.readthedocs.io/projects/lint/)
+
 Ansible role for the **host software stack of a headless Linux dev host** whose
 project toolchains live in [DevPod](https://devpod.sh/) workspaces.
 
