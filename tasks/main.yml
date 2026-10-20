@@ -118,6 +118,17 @@
     mode: "0755"
   when: dev_stack_install_devpod | bool
 
+# --- tea (Gitea CLI) ---------------------------------------------------------
+- name: Install the tea CLI
+  # Verified against the SHA-256 file published next to the binary. Because the
+  # checksum follows the version, a bumped version re-fetches the binary.
+  ansible.builtin.get_url:
+    url: "{{ dev_stack_tea_url }}"
+    dest: "{{ dev_stack_tea_path }}"
+    checksum: "sha256:{{ dev_stack_tea_url }}.sha256"
+    mode: "0755"
+  when: dev_stack_install_tea | bool
+
 # --- Account facts (home + uid, used by the shell and agent tasks) -----------
 - name: Resolve the dev user's account details
   ansible.builtin.getent:
