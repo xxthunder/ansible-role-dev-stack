@@ -1,6 +1,6 @@
-# [ARDS-008] CI runs on a Python that ansible-core supports
+# [ARDS-008] ✅ DONE - CI runs on a Python that ansible-core supports
 
-**Status**: In Progress
+**Status**: Done (2026-10-20)
 **Priority**: High
 **Component**: `.github/workflows/test.yml`
 **Related**: [ARDS-007](ards-007.md) — its pull request found this
@@ -31,4 +31,4 @@ runner's pip announces its own upgrades.
 **Acceptance Criteria**:
 - [x] Both Python jobs in `.github/workflows/test.yml` use Python 3.14
 - [x] ansible-lint and Molecule run to their own result on a pull request
-- [ ] No Node 20 deprecation and no pip upgrade notice in the run
+- [x] No Node 20 deprecation and no pip upgrade notice in the run
