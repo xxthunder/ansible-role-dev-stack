@@ -9,6 +9,10 @@ name: CI
 permissions:
   contents: read
 
+# The runner's pip announces its own upgrades; that says nothing about the role.
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 defaults:
   run:
     working-directory: "dev-stack"
@@ -19,13 +23,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the codebase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: "dev-stack"
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.x"
+          python-version: "3.14"
       - name: Install test dependencies
         run: pip3 install ansible-core ansible-lint
       - name: Run ansible-lint
@@ -38,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the codebase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: "dev-stack"
       - name: Install zsh
@@ -54,13 +58,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the codebase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: "dev-stack"
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.x"
+          python-version: "3.14"
       - name: Install test dependencies
         run: pip3 install ansible-core "molecule-plugins[docker]" docker
       - name: Run Molecule tests
