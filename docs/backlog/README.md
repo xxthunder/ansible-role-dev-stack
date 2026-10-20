@@ -19,6 +19,7 @@
 - [ARDS-004b — A mistyped `dev_stack_user` is created instead of failing](ards-004b.md)
 
 ### In Progress
+- [ARDS-008 — CI runs on a Python that ansible-core supports](ards-008.md)
 - [ARDS-007 — Install `tea`, the Gitea CLI, on request](ards-007.md)
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
