@@ -15,10 +15,20 @@ resolved to Python 3.15.0, which ansible-core 2.21.5 does not support ("supports
 3.14"). ansible-lint and Molecule then crash on import with `AttributeError: module 'dataclasses'
 has no attribute '_is_type'`, before a single scenario runs — on every push, `main` included.
 
+Once it ran, the same runs carried two more notices: `actions/checkout@v4` and
+`actions/setup-python@v5` target the deprecated Node 20 and are forced onto Node 24, and the
+runner's pip announces its own upgrades.
+
 **Scope Decisions**:
 - **Pin the minor version** to the newest one ansible-core supports, `3.14`, in both jobs.
   Moving it on is a deliberate change when ansible-core supports the next one.
+- **The actions move to v7**, the first majors that run on Node 24; pip's version check is
+  switched off for the workflow.
+- **Left as they are:** the notice that `ubuntu-latest` moves to Ubuntu 26 (the scenarios run
+  in Debian and Ubuntu containers), the `master` hint from inside `actions/checkout`, and
+  Molecule's notes about steps without a playbook.
 
 **Acceptance Criteria**:
-- [ ] Both Python jobs in `.github/workflows/test.yml` use Python 3.14
-- [ ] ansible-lint and Molecule run to their own result on a pull request
+- [x] Both Python jobs in `.github/workflows/test.yml` use Python 3.14
+- [x] ansible-lint and Molecule run to their own result on a pull request
+- [ ] No Node 20 deprecation and no pip upgrade notice in the run
