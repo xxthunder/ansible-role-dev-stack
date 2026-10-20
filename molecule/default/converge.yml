@@ -6,5 +6,6 @@
     dev_stack_apt_upgrade: false
     dev_stack_install_docker: false
     dev_stack_ssh_agent: false
+    dev_stack_install_tea: true
   roles:
     - role: dev-stack

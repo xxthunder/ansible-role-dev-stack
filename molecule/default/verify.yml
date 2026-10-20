@@ -16,6 +16,10 @@
         src: /etc/ssh/sshd_config.d/10-dev-stack-hardening.conf
       register: sshd_dropin
 
+    - name: Run the tea CLI
+      ansible.builtin.command: /usr/local/bin/tea --version
+      changed_when: false
+
     - name: Look up the login user
       ansible.builtin.getent:
         database: passwd
