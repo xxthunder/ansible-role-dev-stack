@@ -26,6 +26,10 @@ outlives a disconnect.
   repository by default, with the login user in the `docker` group; or rootless
   Podman (see "Container runtime" below).
 - **DevPod CLI**: a single static binary in `/usr/local/bin`.
+- **tea**, only with `dev_stack_install_tea: true`: the Gitea CLI, for a coding agent that
+  runs on the host and opens pull requests on a Gitea forge. A pinned release, verified
+  against the SHA-256 file published next to it; Debian's `tea` package is an unrelated
+  editor. The login is a token and stays with the operator: `tea login add` once per host.
 - **Shell**: `zsh` and `oh-my-zsh` for the operator, with zsh as the login
   shell. zsh is load-bearing, not just preference: it sources `~/.zshenv` on
   every invocation, including the non-interactive `zsh -c` that sshd runs for
@@ -143,6 +147,10 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | `dev_stack_devpod_version` | `latest` | Pin a release tag (e.g. `v0.6.15`) for reproducibility. |
 | `dev_stack_devpod_url` | derived from the version | Download URL of the DevPod binary. |
 | `dev_stack_devpod_path` | `/usr/local/bin/devpod` | Where the binary goes. |
+| `dev_stack_install_tea` | `false` | Install tea, the Gitea CLI. |
+| `dev_stack_tea_version` | `0.16.0` | tea release; bumping it re-fetches the binary. |
+| `dev_stack_tea_url` | derived from the version | Download URL; its SHA-256 file sits next to it. |
+| `dev_stack_tea_path` | `/usr/local/bin/tea` | Where the binary goes. |
 | `dev_stack_install_zsh` | `true` | Install zsh and oh-my-zsh. |
 | `dev_stack_set_user_shell` | `true` | Make zsh the login shell (needed for the `~/.zshenv` hook). |
 | `dev_stack_ohmyzsh_repo` | the oh-my-zsh GitHub URL | Where oh-my-zsh is cloned from. |

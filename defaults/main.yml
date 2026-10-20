@@ -3,9 +3,9 @@
 # Linux dev host that runs DevPod workspaces. Thin by design: the host is a
 # container host for DevPod. Project toolchains live inside each workspace's
 # .devcontainer, NOT on the host — so this role installs only Docker, the
-# DevPod CLI, tmux, qemu-guest-agent on request, the apt upgrade, the operator's shell
-# (zsh + oh-my-zsh), and a persistent ssh-agent holding the forge-only git
-# identity (the two-identity credential model — see below).
+# DevPod CLI, tmux, qemu-guest-agent and tea on request, the apt upgrade, the
+# operator's shell (zsh + oh-my-zsh), and a persistent ssh-agent holding the
+# forge-only git identity (the two-identity credential model — see below).
 #
 # Runtime is Docker (Docker over Podman for DevPod).
 
@@ -73,6 +73,18 @@ dev_stack_devpod_url: >-
      else 'https://github.com/loft-sh/devpod/releases/download/'
           ~ dev_stack_devpod_version ~ '/devpod-linux-amd64' }}
 dev_stack_devpod_path: "/usr/local/bin/devpod"
+
+# --- tea (Gitea CLI) ---------------------------------------------------------
+# A coding agent that runs on the host and drives the workspaces from outside
+# needs its forge CLI on the host too; for a Gitea forge that is tea. Off by
+# default. The login is a token, a credential: the operator runs
+# `tea login add` once per host, the role does not.
+dev_stack_install_tea: false
+# A release without the leading "v". The download URL and its SHA-256 file
+# follow from it, so bumping it re-fetches the binary on the next run.
+dev_stack_tea_version: "0.16.0"
+dev_stack_tea_url: "https://dl.gitea.com/tea/{{ dev_stack_tea_version }}/tea-{{ dev_stack_tea_version }}-linux-amd64"
+dev_stack_tea_path: "/usr/local/bin/tea"
 
 # --- Shell (zsh + oh-my-zsh) -------------------------------------------------
 # The operator's interactive shell on the host. zsh is also load-bearing for the
