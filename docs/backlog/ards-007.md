@@ -1,6 +1,6 @@
-# [ARDS-007] Install `tea`, the Gitea CLI, on request
+# [ARDS-007] ✅ DONE - Install `tea`, the Gitea CLI, on request
 
-**Status**: In Progress
+**Status**: Done (2026-10-21)
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
@@ -32,9 +32,9 @@ not an option.
   step the operator runs once per host.
 
 **Acceptance Criteria**:
-- [ ] With `dev_stack_install_tea: true`, the role installs the pinned `tea` release to
+- [x] With `dev_stack_install_tea: true`, the role installs the pinned `tea` release to
       `/usr/local/bin/tea`, verified against its published SHA-256
-- [ ] The default test scenario installs it and asserts that `tea --version` runs
-- [ ] The variables are in `defaults/main.yml`, `meta/argument_specs.yml` and the README
-- [ ] CI is green on the pull request
-- [ ] Released as a release candidate for the consumer to verify on a real host
+- [x] The default test scenario installs it and asserts that `tea --version` runs
+- [x] The variables are in `defaults/main.yml`, `meta/argument_specs.yml` and the README
+- [x] CI is green on the pull request
+- [x] Released as a release candidate for the consumer to verify on a real host
