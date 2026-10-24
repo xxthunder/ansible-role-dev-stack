@@ -2,7 +2,7 @@
 
 **Status**: In Progress
 **Priority**: Medium
-**Component**: `defaults/main.yml`, `tasks/main.yml`, `README.md`, test scenario
+**Component**: `defaults/main.yml`, `README.md`, test scenario
 **Related**: [ARDS-007](ards-007.md) — the same reasoning for `tea`: a tool the host-side
 agent and editor use belongs on the host; consumer item HSH-093
 
@@ -23,15 +23,15 @@ Debian 13 ships `git-lfs` in main (3.6.1); it depends on `git`.
 - **A base package, on by default.** `git-lfs` joins `dev_stack_base_packages`; it is small,
   and git on a dev host is expected to handle LFS. A consumer who overrides the list leaves
   it out by doing so.
-- **Filters configured system-wide.** The role runs `git lfs install --system` once, so
-  every user's clones fetch LFS content; it changes nothing when `/etc/gitconfig` already
-  has the `filter.lfs` entries.
+- **The package sets the filters.** Debian's `git-lfs` postinst runs
+  `git lfs install --skip-repo --system`, so every user's clones fetch LFS content; the role
+  adds no task of its own, and the test holds the package to it.
 
 **Acceptance Criteria**:
 - [ ] `dev_stack_base_packages` defaults to `ca-certificates`, `tmux`, `git-lfs`
-- [ ] The role configures the LFS filters system-wide, and a second run reports no change
-- [ ] The default test scenario asserts that `git lfs version` runs and
-      `git config --system filter.lfs.process` is set
-- [ ] The README and `meta/argument_specs.yml` name the new default
+- [ ] The default test scenario asserts that `git-lfs version` runs and `/etc/gitconfig`
+      sets the LFS filter
+- [ ] The README and the defaults name the new default; `meta/argument_specs.yml` keeps
+      no values
 - [ ] CI is green on the pull request
 - [ ] Released as a release candidate for the consumer to verify on a real host
