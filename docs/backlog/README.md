@@ -9,6 +9,7 @@
 ## Table of Contents
 
 ### Open
+- [ARDS-009 — Install `git-lfs` with the base packages](ards-009.md)
 - [ARDS-005 — Ubuntu 24.04 support](ards-005.md)
 - [ARDS-004h — The Docker path fails on a minimal host: `deb822_repository` needs `python3-debian`](ards-004h.md)
 - [ARDS-004g — `become_user` needs `acl` when connecting as another user](ards-004g.md)
