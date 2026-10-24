@@ -17,9 +17,12 @@ outlives a disconnect.
 ## What it installs
 
 - **apt full-upgrade**: a cloud image is only patched to its build date.
-- **Base packages**: `ca-certificates` and `tmux`. tmux is the host-side session
+- **Base packages**: `ca-certificates`, `tmux` and `git-lfs`. tmux is the host-side session
   multiplexer that keeps long-running sessions alive across disconnects, kept in
-  one place rather than baked into every devcontainer.
+  one place rather than baked into every devcontainer. `git-lfs` serves the git that runs
+  on the host — an editor over Remote-SSH, a coding agent. Debian's package sets the LFS
+  filters in `/etc/gitconfig` on install, so clones fetch LFS content instead of pointer
+  files.
 - **qemu-guest-agent**, only with `dev_stack_qemu_guest_agent: true`: it reports
   the guest IP and heartbeat to a QEMU/Proxmox host and is useless elsewhere.
 - **A container runtime for DevPod**: Docker Engine from Docker's own apt
@@ -135,7 +138,7 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | --- | --- | --- |
 | `dev_stack_user` | `vmuser` | Login user the stack is installed for. |
 | `dev_stack_apt_upgrade` | `true` | Run `apt dist-upgrade` first. |
-| `dev_stack_base_packages` | `ca-certificates`, `tmux` | Base packages for every host. |
+| `dev_stack_base_packages` | `ca-certificates`, `tmux`, `git-lfs` | Base packages for every host. |
 | `dev_stack_qemu_guest_agent` | `false` | Install and start qemu-guest-agent; set it on a QEMU/Proxmox VM. |
 | `dev_stack_container_runtime` | `docker` | `docker`, `podman` (rootless) or `none`; see "Container runtime". |
 | `dev_stack_install_docker` | `true` | Deprecated: `false` means runtime `none`. |
