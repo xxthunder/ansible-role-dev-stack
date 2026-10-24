@@ -1,6 +1,6 @@
 # [ARDS-009] Install `git-lfs` with the base packages
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: Medium
 **Component**: `defaults/main.yml`, `tasks/main.yml`, `README.md`, test scenario
 **Related**: [ARDS-007](ards-007.md) — the same reasoning for `tea`: a tool the host-side
