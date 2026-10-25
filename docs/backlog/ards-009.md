@@ -1,6 +1,6 @@
-# [ARDS-009] Install `git-lfs` with the base packages
+# [ARDS-009] ✅ DONE - Install `git-lfs` with the base packages
 
-**Status**: In Progress
+**Status**: Done (2026-10-25)
 **Priority**: Medium
 **Component**: `defaults/main.yml`, `README.md`, test scenario
 **Related**: [ARDS-007](ards-007.md) — the same reasoning for `tea`: a tool the host-side
@@ -28,10 +28,10 @@ Debian 13 ships `git-lfs` in main (3.6.1); it depends on `git`.
   adds no task of its own, and the test holds the package to it.
 
 **Acceptance Criteria**:
-- [ ] `dev_stack_base_packages` defaults to `ca-certificates`, `tmux`, `git-lfs`
-- [ ] The default test scenario asserts that `git-lfs version` runs and `/etc/gitconfig`
+- [x] `dev_stack_base_packages` defaults to `ca-certificates`, `tmux`, `git-lfs`
+- [x] The default test scenario asserts that `git-lfs version` runs and `/etc/gitconfig`
       sets the LFS filter
-- [ ] The README and the defaults name the new default; `meta/argument_specs.yml` keeps
+- [x] The README and the defaults name the new default; `meta/argument_specs.yml` keeps
       no values
-- [ ] CI is green on the pull request
-- [ ] Released as a release candidate for the consumer to verify on a real host
+- [x] CI is green on the pull request
+- [x] Released as a release candidate for the consumer to verify on a real host
