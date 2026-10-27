@@ -1,6 +1,6 @@
-# [ARDS-010] Install uv, at a version past the emSign CA incident
+# [ARDS-010] ✅ DONE - Install uv, at a version past the emSign CA incident
 
-**Status**: In Progress
+**Status**: Done (2026-10-27)
 **Priority**: High
 **Component**: `defaults/main.yml`, `tasks/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario, `tests/test_role_hygiene.sh`
@@ -44,12 +44,12 @@ Raised on 2026-10-27.
   hand-installed copy no longer shadows the role's.
 
 **Acceptance Criteria**:
-- [ ] The role installs uv at a pinned version, 0.13.4 or later, on the default path for all
+- [x] The role installs uv at a pinned version, 0.13.4 or later, on the default path for all
       users
-- [ ] The default test scenario asserts that `uv --version` reports the pinned version
-- [ ] The README and the defaults name the new variables; `meta/argument_specs.yml` keeps no
+- [x] The default test scenario asserts that `uv --version` reports the pinned version
+- [x] The README and the defaults name the new variables; `meta/argument_specs.yml` keeps no
       values
-- [ ] A uv the user installed by hand into `~/.local/bin` is reported, and no task but a
+- [x] A uv the user installed by hand into `~/.local/bin` is reported, and no task but a
       `stat` touches that directory
-- [ ] CI is green on the pull request
-- [ ] Released as a release candidate for the consumer to verify on a real host
+- [x] CI is green on the pull request
+- [x] Released as a release candidate for the consumer to verify on a real host
