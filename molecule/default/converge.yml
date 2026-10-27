@@ -7,5 +7,6 @@
     dev_stack_install_docker: false
     dev_stack_ssh_agent: false
     dev_stack_install_tea: true
+    dev_stack_install_uv: true
   roles:
     - role: dev-stack
