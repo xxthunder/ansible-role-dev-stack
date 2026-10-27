@@ -143,6 +143,69 @@
     dev_stack_user_home: "{{ ansible_facts['getent_passwd'][dev_stack_user][4] }}"
     dev_stack_user_uid: "{{ ansible_facts['getent_passwd'][dev_stack_user][1] }}"
 
+# --- uv (Python package and project manager) ---------------------------------
+- name: Install uv
+  when: dev_stack_install_uv | bool
+  # On a fresh host --check downloads nothing, so there is nothing to unpack or
+  # link; tolerated in check mode only.
+  ignore_errors: "{{ ansible_check_mode }}"
+  block:
+    - name: Create the directory for this uv release
+      ansible.builtin.file:
+        path: "{{ dev_stack_uv_home }}/{{ dev_stack_uv_version }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download the uv release
+      # Verified against the SHA-256 file published next to the archive.
+      ansible.builtin.get_url:
+        url: "{{ dev_stack_uv_url }}"
+        dest: "{{ dev_stack_uv_home }}/{{ dev_stack_uv_version }}/uv.tar.gz"
+        checksum: "sha256:{{ dev_stack_uv_url }}.sha256"
+        mode: "0644"
+
+    - name: Unpack uv and uvx
+      ansible.builtin.unarchive:
+        src: "{{ dev_stack_uv_home }}/{{ dev_stack_uv_version }}/uv.tar.gz"
+        dest: "{{ dev_stack_uv_home }}/{{ dev_stack_uv_version }}"
+        remote_src: true
+        extra_opts: ["--strip-components=1"]
+        creates: "{{ dev_stack_uv_home }}/{{ dev_stack_uv_version }}/uv"
+
+    - name: Link uv and uvx into the bin dir
+      ansible.builtin.file:
+        src: "{{ dev_stack_uv_home }}/{{ dev_stack_uv_version }}/{{ item }}"
+        dest: "{{ dev_stack_uv_bin_dir }}/{{ item }}"
+        state: link
+      loop:
+        - uv
+        - uvx
+
+- name: Report a uv the user installed by hand
+  # uv's own installer puts uv into ~/.local/bin and that directory on the PATH
+  # ahead of the bin dir, so its copy shadows the role's. It is the user's file:
+  # the role reports it and leaves it alone.
+  when: dev_stack_install_uv | bool
+  block:
+    - name: Look for uv and uvx in the user's ~/.local/bin
+      ansible.builtin.stat:
+        path: "{{ dev_stack_user_home }}/.local/bin/{{ item }}"
+      loop:
+        - uv
+        - uvx
+      register: dev_stack_user_uv
+
+    - name: Warn that the user's uv shadows the role's
+      ansible.builtin.debug:
+        msg: >-
+          {{ item.stat.path }} shadows {{ dev_stack_uv_bin_dir }}/{{ item.item }}
+          for {{ dev_stack_user }}. Remove it to use the role's uv
+          {{ dev_stack_uv_version }}.
+      loop: "{{ dev_stack_user_uv.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: item.stat.exists
+
 # --- Linger (the user manager without a login) ------------------------------
 - name: Enable linger so user services run without an active login
   # Lets the systemd --user instance — and with it the persistent agent and the

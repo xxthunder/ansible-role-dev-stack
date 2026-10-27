@@ -33,6 +33,13 @@ outlives a disconnect.
   runs on the host and opens pull requests on a Gitea forge. A pinned release, verified
   against the SHA-256 file published next to it; Debian's `tea` package is an unrelated
   editor. The login is a token and stays with the operator: `tea login add` once per host.
+- **uv**, only with `dev_stack_install_uv: true`: the Python package and project manager,
+  for a coding agent on the host that runs its helper scripts with `uv run`; uv fetches
+  their interpreter and dependencies itself. A pinned release, verified against the
+  SHA-256 file published next to it, unpacked to `/opt/uv/<version>` with `uv` and `uvx`
+  linked into `/usr/local/bin`. The default is past the eMudhra/emSign CA incident of
+  October 2026 (0.13.4 or later). A uv the user installed by hand into `~/.local/bin`
+  shadows the role's; the role warns about it and leaves it in place.
 - **Shell**: `zsh` and `oh-my-zsh` for the operator, with zsh as the login
   shell. zsh is load-bearing, not just preference: it sources `~/.zshenv` on
   every invocation, including the non-interactive `zsh -c` that sshd runs for
@@ -154,6 +161,11 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | `dev_stack_tea_version` | `0.16.0` | tea release; bumping it re-fetches the binary. |
 | `dev_stack_tea_url` | derived from the version | Download URL; its SHA-256 file sits next to it. |
 | `dev_stack_tea_path` | `/usr/local/bin/tea` | Where the binary goes. |
+| `dev_stack_install_uv` | `false` | Install uv and uvx. |
+| `dev_stack_uv_version` | `0.13.6` | uv release; bumping it installs the new release next to the old one and moves the links. |
+| `dev_stack_uv_url` | derived from the version | Download URL; its SHA-256 file sits next to it. |
+| `dev_stack_uv_home` | `/opt/uv` | Releases unpack to `<home>/<version>`. |
+| `dev_stack_uv_bin_dir` | `/usr/local/bin` | Where the `uv` and `uvx` links go. |
 | `dev_stack_install_zsh` | `true` | Install zsh and oh-my-zsh. |
 | `dev_stack_set_user_shell` | `true` | Make zsh the login shell (needed for the `~/.zshenv` hook). |
 | `dev_stack_ohmyzsh_repo` | the oh-my-zsh GitHub URL | Where oh-my-zsh is cloned from. |

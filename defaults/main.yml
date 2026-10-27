@@ -3,7 +3,7 @@
 # Linux dev host that runs DevPod workspaces. Thin by design: the host is a
 # container host for DevPod. Project toolchains live inside each workspace's
 # .devcontainer, NOT on the host — so this role installs only Docker, the
-# DevPod CLI, tmux, git-lfs, qemu-guest-agent and tea on request, the apt
+# DevPod CLI, tmux, git-lfs, qemu-guest-agent, tea and uv on request, the apt
 # upgrade, the operator's shell (zsh + oh-my-zsh), and a persistent ssh-agent
 # holding the forge-only git identity (the two-identity credential model — see
 # below).
@@ -89,6 +89,21 @@ dev_stack_install_tea: false
 dev_stack_tea_version: "0.16.0"
 dev_stack_tea_url: "https://dl.gitea.com/tea/{{ dev_stack_tea_version }}/tea-{{ dev_stack_tea_version }}-linux-amd64"
 dev_stack_tea_path: "/usr/local/bin/tea"
+
+# --- uv (Python package and project manager) ---------------------------------
+# A coding agent that runs on the host runs its Python helper scripts with
+# `uv run`; uv fetches their interpreter and dependencies itself, so it is the
+# one Python tool the host carries. Off by default.
+dev_stack_install_uv: false
+# A release without a leading "v". 0.13.4 is the first past the eMudhra/emSign
+# CA incident (PSF advisory, October 2026): earlier releases still trust the
+# withdrawn root. Each release unpacks into a directory of its own, so bumping
+# the version installs it next to the old one and moves the links.
+dev_stack_uv_version: "0.13.6"
+dev_stack_uv_url: "https://github.com/astral-sh/uv/releases/download/{{ dev_stack_uv_version }}/uv-x86_64-unknown-linux-gnu.tar.gz"
+# Releases unpack to <home>/<version>; uv and uvx are linked into the bin dir.
+dev_stack_uv_home: "/opt/uv"
+dev_stack_uv_bin_dir: "/usr/local/bin"
 
 # --- Shell (zsh + oh-my-zsh) -------------------------------------------------
 # The operator's interactive shell on the host. zsh is also load-bearing for the

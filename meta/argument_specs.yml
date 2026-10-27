@@ -64,6 +64,21 @@ argument_specs:
       dev_stack_tea_path:
         type: str
         description: Where the tea binary is installed.
+      dev_stack_install_uv:
+        type: bool
+        description: Install uv and uvx, the Python package and project manager.
+      dev_stack_uv_version:
+        type: str
+        description: uv release to install, without a leading "v".
+      dev_stack_uv_url:
+        type: str
+        description: Download URL of the uv archive; derived from the version. Its SHA-256 file is expected at the same URL plus ".sha256".
+      dev_stack_uv_home:
+        type: str
+        description: Directory each uv release unpacks into, one subdirectory per version.
+      dev_stack_uv_bin_dir:
+        type: str
+        description: Where the uv and uvx links are placed.
       dev_stack_install_zsh:
         type: bool
         description: Install zsh and oh-my-zsh for the user.
