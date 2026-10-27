@@ -20,6 +20,16 @@
       ansible.builtin.command: /usr/local/bin/tea --version
       changed_when: false
 
+    - name: Run uv
+      ansible.builtin.command: /usr/local/bin/uv --version
+      changed_when: false
+      register: uv_version
+
+    - name: Run uvx
+      ansible.builtin.command: /usr/local/bin/uvx --version
+      changed_when: false
+      register: uvx_version
+
     - name: Run git-lfs
       ansible.builtin.command: git-lfs version
       changed_when: false
@@ -44,6 +54,8 @@
           - ansible_facts.getent_passwd.vmuser[5] == '/usr/bin/zsh'
           - "'git-lfs' in ansible_facts.packages"
           - "'git-lfs filter-process' in (system_gitconfig.content | b64decode)"
+          - uv_version.stdout is search('^uv 0[.]13[.]6 ')
+          - uvx_version.stdout is search('^uvx 0[.]13[.]6 ')
 
     - name: Assert qemu-guest-agent is not installed by default
       ansible.builtin.assert:
