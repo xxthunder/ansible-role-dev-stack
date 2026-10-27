@@ -1,6 +1,6 @@
 # [ARDS-010] Install uv, at a version past the emSign CA incident
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: High
 **Component**: `defaults/main.yml`, `tasks/`, `README.md`, test scenario
 **Related**: [ARDS-007](ards-007.md): the same reasoning as for `tea`, a tool the host-side

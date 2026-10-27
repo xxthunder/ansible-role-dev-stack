@@ -9,7 +9,6 @@
 ## Table of Contents
 
 ### Open
-- [ARDS-010 — Install uv, at a version past the emSign CA incident](ards-010.md)
 - [ARDS-005 — Ubuntu 24.04 support](ards-005.md)
 - [ARDS-004h — The Docker path fails on a minimal host: `deb822_repository` needs `python3-debian`](ards-004h.md)
 - [ARDS-004g — `become_user` needs `acl` when connecting as another user](ards-004g.md)
@@ -20,6 +19,7 @@
 - [ARDS-004b — A mistyped `dev_stack_user` is created instead of failing](ards-004b.md)
 
 ### In Progress
+- [ARDS-010 — Install uv, at a version past the emSign CA incident](ards-010.md)
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
