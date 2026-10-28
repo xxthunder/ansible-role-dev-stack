@@ -135,6 +135,12 @@ key goes on your git forge only, never into any server's `authorized_keys`.
 - With `dev_stack_ssh_agent: true` the role **owns `~/.zshenv`** of
   `dev_stack_user` and replaces an existing one. Keep your own settings in
   `~/.zshrc`, which the role only seeds once and never overwrites.
+- **A host that runs the play on itself** (`--connection local`, for example a WSL
+  distribution without an SSH server) needs Python and Ansible before the first run, so the
+  role cannot install the tool they come from. If uv provides Ansible there
+  (`uv tool install ansible-core`), install uv by hand first and leave
+  `dev_stack_install_uv` at `false`: the role then neither installs a second uv nor warns
+  about yours.
 
 ## Role variables
 
