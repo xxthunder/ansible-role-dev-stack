@@ -9,7 +9,7 @@
 ## Table of Contents
 
 ### Open
-- [ARDS-012 — The bootstrap note installs Ansible on a Python it does not support](ards-012.md)
+- [ARDS-012 — The README misses two traps of a first run: Python 3.15 and a proxy under sudo](ards-012.md)
 - [ARDS-005 — Ubuntu 24.04 support](ards-005.md)
 - [ARDS-004h — The Docker path fails on a minimal host: `deb822_repository` needs `python3-debian`](ards-004h.md)
 - [ARDS-004g — `become_user` needs `acl` when connecting as another user](ards-004g.md)
