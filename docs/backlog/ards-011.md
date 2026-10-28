@@ -1,6 +1,6 @@
-# [ARDS-011] Document the bootstrap of a host that runs the play on itself
+# [ARDS-011] ✅ DONE - Document the bootstrap of a host that runs the play on itself
 
-**Status**: In Progress
+**Status**: Done (2026-10-28)
 **Priority**: Low
 **Component**: `README.md`
 **Related**: [ARDS-010](ards-010.md): installs uv on request and reports a hand-installed copy
@@ -29,7 +29,7 @@ Raised on 2026-10-28.
   variable and no task changes.
 
 **Acceptance Criteria**:
-- [ ] The README's requirements name what a host that runs the play on itself needs before
+- [x] The README's requirements name what a host that runs the play on itself needs before
       the first run, and that `dev_stack_install_uv` stays `false` when a hand-installed uv
       provides Ansible
-- [ ] CI is green after the push
+- [x] CI is green after the push

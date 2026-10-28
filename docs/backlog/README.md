@@ -19,11 +19,11 @@
 - [ARDS-004b — A mistyped `dev_stack_user` is created instead of failing](ards-004b.md)
 
 ### In Progress
-- [ARDS-011 — Document the bootstrap of a host that runs the play on itself](ards-011.md)
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
 ### Done
+- [ARDS-011 — Document the bootstrap of a host that runs the play on itself](ards-011.md)
 - [ARDS-010 — Install uv, at a version past the emSign CA incident](ards-010.md)
 - [ARDS-009 — Install `git-lfs` with the base packages](ards-009.md)
 - [ARDS-008 — CI runs on a Python that ansible-core supports](ards-008.md)
