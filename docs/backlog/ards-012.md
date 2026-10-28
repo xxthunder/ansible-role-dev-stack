@@ -1,4 +1,4 @@
-# [ARDS-012] The README misses two traps of a first run: Python 3.15 and a proxy under sudo
+# [ARDS-012] The README misses traps of a first run, and misstates how DevPod is re-fetched
 
 **Status**: Open
 **Priority**: Medium
@@ -11,7 +11,7 @@ to install Ansible on a Python it supports and to say how the proxy reaches the 
 downloads, so that the first run does not fail on either.
 
 **Description**:
-Both traps came up on a consumer's first run on 2026-10-28.
+The first two traps came up on a consumer's first run on 2026-10-28.
 
 *Python 3.15.* The bullet ARDS-011 added to the README's requirements recommends
 `uv tool install ansible-core`. uv then takes the newest Python it has. On a host whose uv
@@ -46,6 +46,15 @@ environment:
   no_proxy: "{{ lookup('ansible.builtin.env', 'no_proxy') }}"
 ```
 
+*DevPod is not skipped while the file exists.* The defaults (`dev_stack_devpod_version`), the
+DevPod task's comment and the README all say that `get_url` skips the download while
+`/usr/local/bin/devpod` exists. In ansible-core 2.21.5, `get_url` without a `checksum` skips
+nothing: for an existing file it sends a conditional request (`If-Modified-Since`) on every
+run, and only a checksum lets it return without a request. Found when a consumer behind a
+TLS-inspecting proxy put the binary in place by other means and the task still failed in the
+TLS handshake. Unverified: whether a re-run with `latest` then replaces the binary when a
+newer release is out — the README says it does not.
+
 **Scope Decisions**:
 - **Documentation only** (the agent's call): the role runs on the target's system Python and
   is not affected by the first trap. The proxy belongs to the play, not the role: the role
@@ -56,4 +65,6 @@ environment:
 - [ ] The README's bootstrap command pins a Python that ansible-core supports, and says why
 - [ ] The README says that `become` drops the proxy variables and shows the play-level
       `environment:` that hands them on
+- [ ] The defaults, the DevPod task's comment and the README say that `get_url` connects on
+      every run, and what a re-run with `latest` does, checked against a real run
 - [ ] CI is green after the push
