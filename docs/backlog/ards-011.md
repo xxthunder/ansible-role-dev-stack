@@ -1,6 +1,6 @@
 # [ARDS-011] Document the bootstrap of a host that runs the play on itself
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: Low
 **Component**: `README.md`
 **Related**: [ARDS-010](ards-010.md): installs uv on request and reports a hand-installed copy
