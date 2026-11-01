@@ -30,6 +30,18 @@
       changed_when: false
       register: uvx_version
 
+    - name: Run Claude Code as the login user
+      become: true
+      become_user: vmuser
+      ansible.builtin.command: claude --version
+      changed_when: false
+      register: claude_version
+
+    - name: Read the Claude Code apt repository
+      ansible.builtin.slurp:
+        src: /etc/apt/sources.list.d/claude-code.sources
+      register: claude_sources
+
     - name: Run git-lfs
       ansible.builtin.command: git-lfs version
       changed_when: false
@@ -56,6 +68,9 @@
           - "'git-lfs filter-process' in (system_gitconfig.content | b64decode)"
           - uv_version.stdout is search('^uv 0[.]13[.]6 ')
           - uvx_version.stdout is search('^uvx 0[.]13[.]6 ')
+          - claude_version.stdout is search('Claude Code')
+          - "'downloads.claude.ai/claude-code/apt/stable' in (claude_sources.content | b64decode)"
+          - "'Suites: stable' in (claude_sources.content | b64decode)"
 
     - name: Assert qemu-guest-agent is not installed by default
       ansible.builtin.assert:
