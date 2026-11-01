@@ -9,6 +9,7 @@
 ## Table of Contents
 
 ### Open
+- [ARDS-013 — Install Claude Code from Anthropic's apt repository, on request](ards-013.md)
 - [ARDS-012 — The README misses traps of a first run, and misstates how DevPod is re-fetched](ards-012.md)
 - [ARDS-005 — Ubuntu 24.04 support](ards-005.md)
 - [ARDS-004h — The Docker path fails on a minimal host: `deb822_repository` needs `python3-debian`](ards-004h.md)
