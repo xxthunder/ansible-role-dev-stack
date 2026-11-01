@@ -10,9 +10,9 @@ project toolchains live in [DevPod](https://devpod.sh/) workspaces.
 
 Thin by design: the host is a container host for DevPod. Each project's
 toolchain lives in its own `.devcontainer`, not on the host, and this role
-installs no coding agent and no toolchain. The host carries only what is needed
-to run and reach workspaces, plus the operator's shell and a git identity that
-outlives a disconnect.
+installs no toolchain, and a coding agent only on request. The host carries only
+what is needed to run and reach workspaces, plus the operator's shell and a git
+identity that outlives a disconnect.
 
 ## What it installs
 
@@ -40,6 +40,10 @@ outlives a disconnect.
   linked into `/usr/local/bin`. The default is past the eMudhra/emSign CA incident of
   October 2026 (0.13.4 or later). A uv the user installed by hand into `~/.local/bin`
   shadows the role's; the role warns about it and leaves it in place.
+- **Claude Code**, only with `dev_stack_install_claude_code: true`: the coding agent, for
+  one that runs on the host. It comes from Anthropic's signed apt repository, channel
+  `stable` by default or `latest`. `apt upgrade` updates it; it never updates itself. The
+  role writes no Claude Code settings.
 - **Shell**: `zsh` and `oh-my-zsh` for the operator, with zsh as the login
   shell. zsh is load-bearing, not just preference: it sources `~/.zshenv` on
   every invocation, including the non-interactive `zsh -c` that sshd runs for
@@ -172,6 +176,10 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | `dev_stack_uv_url` | derived from the version | Download URL; its SHA-256 file sits next to it. |
 | `dev_stack_uv_home` | `/opt/uv` | Releases unpack to `<home>/<version>`. |
 | `dev_stack_uv_bin_dir` | `/usr/local/bin` | Where the `uv` and `uvx` links go. |
+| `dev_stack_install_claude_code` | `false` | Install Claude Code from Anthropic's apt repository. |
+| `dev_stack_claude_code_channel` | `stable` | `stable` or `latest`; the apt suite of the repository. |
+| `dev_stack_claude_code_gpg_url` | Anthropic's key URL | Anthropic's apt signing key. |
+| `dev_stack_claude_code_repo_uri` | derived from the channel | Anthropic's apt repository for the channel. |
 | `dev_stack_install_zsh` | `true` | Install zsh and oh-my-zsh. |
 | `dev_stack_set_user_shell` | `true` | Make zsh the login shell (needed for the `~/.zshenv` hook). |
 | `dev_stack_ohmyzsh_repo` | the oh-my-zsh GitHub URL | Where oh-my-zsh is cloned from. |
@@ -183,6 +191,15 @@ values in [`defaults/main.yml`](defaults/main.yml).
 **DevPod version:** with `latest`, a re-run does not upgrade an installed binary
 (`get_url` skips when the file exists). Bump `dev_stack_devpod_version` and
 re-run to upgrade.
+
+**Claude Code behind a proxy:** the role downloads the signing key with curl as the
+connecting user, so that user's proxy variables apply. curl, not `get_url`: Python 3.13
+and later refuse a TLS-inspecting proxy's CA whose Basic Constraints are not marked
+critical, and curl accepts it once the CA is in the system trust store. apt fetches as root and needs its own proxy
+setting in `/etc/apt/apt.conf.d/` (`Acquire::http::Proxy` and `Acquire::https::Proxy`).
+Claude Code runs as the user and takes its proxy and CA from the user's environment: set
+`HTTPS_PROXY`/`https_proxy` and `NO_PROXY` for the proxy, and `NODE_EXTRA_CA_CERTS` where
+TLS inspection replaces certificates.
 
 ## Example playbook
 
