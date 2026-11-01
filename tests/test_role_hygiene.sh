@@ -28,6 +28,22 @@ local_bin_stat=$(grep -B1 '\.local/bin/' "$TASKS" | grep -c 'ansible\.builtin\.s
 check "H2: no task but a stat names a path in the user's ~/.local/bin" \
   "$((local_bin - local_bin_stat))" "0"
 
+# The Claude Code signing key is fetched as the connecting user: `become` drops
+# the user's proxy variables (sudo env_reset), so a root fetch cannot reach the
+# download host. Look within that one task only, from its "- name:" line to the
+# next one at the same indent.
+key_task=$(awk '/^ +- name:/ { if (found) exit; buf="" } { buf = buf $0 "\n" }
+  /\{\{ dev_stack_claude_code_gpg_url \}\}/ { found=1 }
+  END { if (found) printf "%s", buf }' "$TASKS")
+check "H3: the Claude Code key download runs as the connecting user" \
+  "$(printf '%s' "$key_task" | grep -c 'become: false')" "1"
+
+# Python 3.13+ checks X.509 strictly and refuses a TLS-inspecting proxy's CA
+# whose Basic Constraints are not marked critical; get_url runs on that Python.
+# curl verifies the chain without that check, so the key comes with curl.
+check "H4: the Claude Code key download uses curl, not get_url" \
+  "$(printf '%s' "$key_task" | grep -c 'ansible\.builtin\.get_url:') $(printf '%s' "$key_task" | grep -c -- '- curl$')" "0 1"
+
 echo
 if [ "$fails" -eq 0 ]; then echo "all passed"; else echo "$fails failed"; fi
 exit "$fails"

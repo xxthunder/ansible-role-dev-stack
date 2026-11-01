@@ -79,6 +79,19 @@ argument_specs:
       dev_stack_uv_bin_dir:
         type: str
         description: Where the uv and uvx links are placed.
+      dev_stack_install_claude_code:
+        type: bool
+        description: Install Claude Code, the coding agent, from Anthropic's apt repository.
+      dev_stack_claude_code_channel:
+        type: str
+        choices: [stable, latest]
+        description: Release channel of the apt repository. stable is about a week behind and skips releases with major regressions; latest gets every release.
+      dev_stack_claude_code_gpg_url:
+        type: str
+        description: Download URL of the repository's signing key.
+      dev_stack_claude_code_repo_uri:
+        type: str
+        description: URI of the apt repository; derived from the channel.
       dev_stack_install_zsh:
         type: bool
         description: Install zsh and oh-my-zsh for the user.
