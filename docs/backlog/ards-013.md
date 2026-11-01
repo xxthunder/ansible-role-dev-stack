@@ -1,6 +1,6 @@
-# [ARDS-013] Install Claude Code from Anthropic's apt repository, on request
+# [ARDS-013] ✅ DONE - Install Claude Code from Anthropic's apt repository, on request
 
-**Status**: In Progress
+**Status**: Done (2026-11-01)
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
@@ -73,19 +73,19 @@ Source: [Claude Code setup — Linux package managers](https://code.claude.com/d
   job.
 
 **Acceptance Criteria**:
-- [ ] With `dev_stack_install_claude_code: true`, the connecting user downloads the key
+- [x] With `dev_stack_install_claude_code: true`, the connecting user downloads the key
       (`become: false`), the role copies it as root to `/etc/apt/keyrings/claude-code.asc`,
       adds the repository as a deb822 source with `signed_by`, and installs `claude-code`;
       `claude --version` runs as the login user
-- [ ] `dev_stack_claude_code_channel` picks the repository URL and suite; `stable` is the
+- [x] `dev_stack_claude_code_channel` picks the repository URL and suite; `stable` is the
       default, and the argument spec rejects any value other than `stable` or `latest`
-- [ ] A re-run changes nothing; with the variable `false` the role touches nothing of Claude
+- [x] A re-run changes nothing; with the variable `false` the role touches nothing of Claude
       Code
-- [ ] The README lists the option, the channels, that `apt upgrade` updates Claude Code, and
+- [x] The README lists the option, the channels, that `apt upgrade` updates Claude Code, and
       that behind a proxy apt needs its own proxy setting in `/etc/apt/apt.conf.d/` and the
       user's environment the proxy and CA variables for Claude Code
-- [ ] Checked on a WSL distro behind px set up by wsl-manager, through the consumer's
+- [x] Checked on a WSL distro behind px set up by wsl-manager, through the consumer's
       provisioning playbook: the role installs Claude Code, and `claude` reaches the API as
       the login user
-- [ ] The test scenario covers the install
-- [ ] CI is green after the push
+- [x] The test scenario covers the install
+- [x] CI is green after the push
