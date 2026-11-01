@@ -1,6 +1,6 @@
 # [ARDS-013] Install Claude Code from Anthropic's apt repository, on request
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
