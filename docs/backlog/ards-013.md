@@ -56,11 +56,17 @@ Source: [Claude Code setup — Linux package managers](https://code.claude.com/d
   updates go through the host's normal upgrade.
 - **Channel as a variable**, `dev_stack_claude_code_channel`, default `stable`, one of
   `stable` or `latest`. Switching it rewrites the repository; the next upgrade follows it.
-- **The connecting user downloads the key.** The `get_url` task runs with `become: false`, so
-  it has the user's environment and with it the proxy; a second task copies the file as root
+- **The connecting user downloads the key.** The download runs with `become: false`, so it
+  has the user's environment and with it the proxy; a second task copies the file as root
   to `/etc/apt/keyrings/claude-code.asc` (`remote_src`). Then nothing in this block fetches as
   root except apt, which has its own proxy, so the block works behind a proxy without the
   play-level `environment:` of ARDS-012. The role ships no key.
+- **curl, not `get_url`.** A TLS-inspecting proxy may re-sign with a CA whose Basic
+  Constraints are not marked critical. Python 3.13 and later check X.509 strictly and refuse
+  it, and `get_url` runs on the target's Python; a newer Python keeps the check. curl
+  verifies the chain without it, once the CA is in the system trust store. A consumer
+  playbook already fetches DevPod with curl for the same reason. The block installs `curl`
+  with `python3-debian`.
 - **No Claude Code settings.** The role writes no `settings.json`, no managed settings and no
   proxy. The proxy and the CA reach Claude Code through the user's environment.
 - **amd64 only**, like the Docker repository; following the host architecture is ARDS-004e's
@@ -78,7 +84,8 @@ Source: [Claude Code setup — Linux package managers](https://code.claude.com/d
 - [ ] The README lists the option, the channels, that `apt upgrade` updates Claude Code, and
       that behind a proxy apt needs its own proxy setting in `/etc/apt/apt.conf.d/` and the
       user's environment the proxy and CA variables for Claude Code
-- [ ] Checked on a host behind px set up by wsl-manager: the role installs Claude Code without
-      a play-level `environment:`, and `claude` reaches the API as the login user
+- [ ] Checked on a WSL distro behind px set up by wsl-manager, through the consumer's
+      provisioning playbook: the role installs Claude Code, and `claude` reaches the API as
+      the login user
 - [ ] The test scenario covers the install
 - [ ] CI is green after the push
