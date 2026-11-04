@@ -9,7 +9,6 @@
 ## Table of Contents
 
 ### Open
-- [ARDS-014 — Install `gh`, the GitHub CLI, from GitHub's apt repository, on request](ards-014.md)
 - [ARDS-012 — The README misses traps of a first run, and misstates how DevPod is re-fetched](ards-012.md)
 - [ARDS-005 — Ubuntu 24.04 support](ards-005.md)
 - [ARDS-004h — The Docker path fails on a minimal host: `deb822_repository` needs `python3-debian`](ards-004h.md)
@@ -21,6 +20,7 @@
 - [ARDS-004b — A mistyped `dev_stack_user` is created instead of failing](ards-004b.md)
 
 ### In Progress
+- [ARDS-014 — Install `gh`, the GitHub CLI, from GitHub's apt repository, on request](ards-014.md)
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 

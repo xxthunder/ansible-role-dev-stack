@@ -1,6 +1,6 @@
 # [ARDS-014] Install `gh`, the GitHub CLI, from GitHub's apt repository, on request
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `tasks/apt_repo.yml` (new), `defaults/main.yml`,
 `meta/argument_specs.yml`, `README.md`, test scenario
