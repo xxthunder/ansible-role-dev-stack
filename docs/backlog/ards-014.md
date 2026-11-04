@@ -52,6 +52,8 @@ Claude Code has no guaranteed `curl` — although the operator uses it and the k
 need it. It moves into `dev_stack_base_packages`.
 
 **Scope Decisions**:
+- **The gate comes with this item** (2026-11-04): ARDS had no `scripts/gate`, so no item could
+  run through the closed loop; the author asked for it with this pull.
 - **A shared task file, not a second copy** (refinement 2026-11-04). `tasks/apt_repo.yml`
   takes the key URL, the keyring file name, the source name, URI, suite and package as
   parameters. The Claude Code block becomes its first caller; its behaviour, its paths and
