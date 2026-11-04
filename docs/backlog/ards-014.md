@@ -1,6 +1,6 @@
-# [ARDS-014] Install `gh`, the GitHub CLI, from GitHub's apt repository, on request
+# [ARDS-014] ✅ DONE - Install `gh`, the GitHub CLI, from GitHub's apt repository, on request
 
-**Status**: In Progress
+**Status**: Done (2026-11-04)
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `tasks/apt_repo.yml` (new), `defaults/main.yml`,
 `meta/argument_specs.yml`, `README.md`, test scenario
@@ -76,15 +76,15 @@ need it. It moves into `dev_stack_base_packages`.
   job.
 
 **Acceptance Criteria**:
-- [ ] With `dev_stack_install_gh: true`, the role installs the keyring to
+- [x] With `dev_stack_install_gh: true`, the role installs the keyring to
       `/etc/apt/keyrings/githubcli-archive-keyring.gpg`, the deb822 source `github-cli`, and
       the package `gh`; `gh --version` runs as the login user
-- [ ] On a host where `gh` was installed by hand with these paths, a run reports no second
+- [x] On a host where `gh` was installed by hand with these paths, a run reports no second
       source and changes at most the files' content
-- [ ] A re-run changes nothing; with the variable `false` the role touches nothing of `gh`
-- [ ] Claude Code and `gh` both install through `tasks/apt_repo.yml`; on a host with Claude
+- [x] A re-run changes nothing; with the variable `false` the role touches nothing of `gh`
+- [x] Claude Code and `gh` both install through `tasks/apt_repo.yml`; on a host with Claude
       Code already installed, a run after the change reports no change for it
-- [ ] `curl` is in `dev_stack_base_packages` and installed with every other base package
-- [ ] The README lists the option and that `gh auth login` stays with the operator
-- [ ] The test scenario covers the install
-- [ ] CI is green after the push
+- [x] `curl` is in `dev_stack_base_packages` and installed with every other base package
+- [x] The README lists the option and that `gh auth login` stays with the operator
+- [x] The test scenario covers the install
+- [x] CI is green after the push
