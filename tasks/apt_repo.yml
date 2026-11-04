@@ -1,0 +1,98 @@
+---
+# Add one third-party apt repository and install one package from it. Included
+# from main.yml with these variables:
+#   dev_stack_apt_repo_label    name for task titles, e.g. "Claude Code"
+#   dev_stack_apt_repo_key_url  where the signing key is fetched
+#   dev_stack_apt_repo_keyring  file name under /etc/apt/keyrings/
+#   dev_stack_apt_repo_name     deb822 repository name
+#   dev_stack_apt_repo_uri      repository URI
+#   dev_stack_apt_repo_suite    suite (release channel)
+#   dev_stack_apt_repo_package  package to install
+# Component main and architecture amd64 are fixed.
+- name: "Install {{ dev_stack_apt_repo_label }}"
+  # On a fresh host --check does not write the apt repository, so the package
+  # is unresolvable (deb822_repository / apt); tolerated in check mode only.
+  ignore_errors: "{{ ansible_check_mode }}"
+  block:
+    - name: "Install python3-debian, which this block needs"
+      # deb822_repository needs python3-debian, which minimal hosts lack
+      # (ARDS-004h). curl, which fetches the key below, is a base package.
+      ansible.builtin.apt:
+        name: python3-debian
+        state: present
+
+    - name: "Create a temp file for the signing key of {{ dev_stack_apt_repo_label }}"
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .asc
+      become: false
+      changed_when: false
+      check_mode: false  # touches only a temp file that `always:` removes
+      register: dev_stack_apt_repo_key_tmp
+
+    - name: "Download the signing key of {{ dev_stack_apt_repo_label }}"
+      # As the connecting user, because `become` drops the user's proxy
+      # variables (ARDS-012). apt, which runs as root, has its own proxy setting.
+      # With curl, not get_url: Python 3.13+ checks X.509 strictly and refuses
+      # a TLS-inspecting proxy's CA whose Basic Constraints are not marked
+      # critical; curl verifies the chain without that check.
+      ansible.builtin.command:  # noqa: command-instead-of-module
+        argv:
+          - curl
+          - --fail
+          - --silent
+          - --show-error
+          - --location
+          - --retry
+          - "3"
+          - --output
+          - "{{ dev_stack_apt_repo_key_tmp.path }}"
+          - "{{ dev_stack_apt_repo_key_url }}"
+      become: false
+      changed_when: false
+      check_mode: false  # touches only the temp file
+
+    - name: Ensure the apt keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: "Install the signing key of {{ dev_stack_apt_repo_label }}"
+      ansible.builtin.copy:
+        src: "{{ dev_stack_apt_repo_key_tmp.path }}"
+        dest: "/etc/apt/keyrings/{{ dev_stack_apt_repo_keyring }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: "Add the apt repository of {{ dev_stack_apt_repo_label }}"
+      # deb822 .sources file referencing the keyring via signed_by — no key in
+      # the global trust store. suites is the release channel.
+      ansible.builtin.deb822_repository:
+        name: "{{ dev_stack_apt_repo_name }}"
+        types: [deb]
+        uris: "{{ dev_stack_apt_repo_uri }}"
+        suites: ["{{ dev_stack_apt_repo_suite }}"]
+        components: [main]
+        architectures: [amd64]
+        signed_by: "/etc/apt/keyrings/{{ dev_stack_apt_repo_keyring }}"
+        state: present
+        enabled: true
+
+    - name: "Install the package of {{ dev_stack_apt_repo_label }}"
+      ansible.builtin.apt:
+        name: "{{ dev_stack_apt_repo_package }}"
+        state: present
+        update_cache: true
+
+  always:
+    - name: "Remove the temp file of the signing key of {{ dev_stack_apt_repo_label }}"
+      ansible.builtin.file:
+        path: "{{ dev_stack_apt_repo_key_tmp.path }}"
+        state: absent
+      become: false
+      changed_when: false
+      check_mode: false
+      when: dev_stack_apt_repo_key_tmp.path is defined
