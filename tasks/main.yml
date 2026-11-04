@@ -208,94 +208,16 @@
 
 # --- Claude Code (coding agent) ----------------------------------------------
 - name: Install Claude Code
+  ansible.builtin.include_tasks: apt_repo.yml
+  vars:
+    dev_stack_apt_repo_label: Claude Code
+    dev_stack_apt_repo_key_url: "{{ dev_stack_claude_code_gpg_url }}"
+    dev_stack_apt_repo_keyring: claude-code.asc
+    dev_stack_apt_repo_name: claude-code
+    dev_stack_apt_repo_uri: "{{ dev_stack_claude_code_repo_uri }}"
+    dev_stack_apt_repo_suite: "{{ dev_stack_claude_code_channel }}"
+    dev_stack_apt_repo_package: claude-code
   when: dev_stack_install_claude_code | bool
-  # On a fresh host --check does not write the apt repository, so the
-  # claude-code package is unresolvable (deb822_repository / apt); tolerated in
-  # check mode only.
-  ignore_errors: "{{ ansible_check_mode }}"
-  block:
-    - name: Install curl and python3-debian, which this block needs
-      # curl fetches the key below; deb822_repository needs python3-debian,
-      # which minimal hosts lack (ARDS-004h).
-      ansible.builtin.apt:
-        name: [curl, python3-debian]
-        state: present
-
-    - name: Create a temp file for the Claude Code signing key
-      ansible.builtin.tempfile:
-        state: file
-        suffix: .asc
-      become: false
-      changed_when: false
-      check_mode: false  # touches only a temp file that `always:` removes
-      register: dev_stack_claude_code_key_tmp
-
-    - name: Download the Claude Code signing key
-      # As the connecting user, because `become` drops the user's proxy
-      # variables (ARDS-012). apt, which runs as root, has its own proxy setting.
-      # With curl, not get_url: Python 3.13+ checks X.509 strictly and refuses
-      # a TLS-inspecting proxy's CA whose Basic Constraints are not marked
-      # critical; curl verifies the chain without that check.
-      ansible.builtin.command:  # noqa: command-instead-of-module
-        argv:
-          - curl
-          - --fail
-          - --silent
-          - --show-error
-          - --location
-          - --retry
-          - "3"
-          - --output
-          - "{{ dev_stack_claude_code_key_tmp.path }}"
-          - "{{ dev_stack_claude_code_gpg_url }}"
-      become: false
-      changed_when: false
-      check_mode: false  # touches only the temp file
-
-    - name: Ensure the apt keyrings directory exists
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: "0755"
-
-    - name: Install the Claude Code signing key
-      ansible.builtin.copy:
-        src: "{{ dev_stack_claude_code_key_tmp.path }}"
-        dest: /etc/apt/keyrings/claude-code.asc
-        remote_src: true
-        owner: root
-        group: root
-        mode: "0644"
-
-    - name: Add the Claude Code apt repository
-      # deb822 .sources file referencing the keyring via signed_by — no key in
-      # the global trust store. suites is the release channel.
-      ansible.builtin.deb822_repository:
-        name: claude-code
-        types: [deb]
-        uris: "{{ dev_stack_claude_code_repo_uri }}"
-        suites: ["{{ dev_stack_claude_code_channel }}"]
-        components: [main]
-        architectures: [amd64]
-        signed_by: /etc/apt/keyrings/claude-code.asc
-        state: present
-        enabled: true
-
-    - name: Install the Claude Code package
-      ansible.builtin.apt:
-        name: claude-code
-        state: present
-        update_cache: true
-
-  always:
-    - name: Remove the temp file of the Claude Code signing key
-      ansible.builtin.file:
-        path: "{{ dev_stack_claude_code_key_tmp.path }}"
-        state: absent
-      become: false
-      changed_when: false
-      check_mode: false
-      when: dev_stack_claude_code_key_tmp.path is defined
 
 # --- Linger (the user manager without a login) ------------------------------
 - name: Enable linger so user services run without an active login
