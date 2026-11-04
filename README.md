@@ -42,6 +42,11 @@ identity that outlives a disconnect.
   linked into `/usr/local/bin`. The default is past the eMudhra/emSign CA incident of
   October 2026 (0.13.4 or later). A uv the user installed by hand into `~/.local/bin`
   shadows the role's; the role warns about it and leaves it in place.
+- **gh**, only with `dev_stack_install_gh: true`: the GitHub CLI, for a coding agent that
+  runs on the host and opens pull requests on GitHub. It comes from GitHub's signed apt
+  repository; `apt upgrade` updates it. The signing key is fetched fresh on every run,
+  because GitHub rotated it in 2026. The login stays with the operator: `gh auth login`
+  once per host.
 - **Claude Code**, only with `dev_stack_install_claude_code: true`: the coding agent, for
   one that runs on the host. It comes from Anthropic's signed apt repository, channel
   `stable` by default or `latest`. `apt upgrade` updates it; it never updates itself. The
@@ -182,6 +187,9 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | `dev_stack_claude_code_channel` | `stable` | `stable` or `latest`; the apt suite of the repository. |
 | `dev_stack_claude_code_gpg_url` | Anthropic's key URL | Anthropic's apt signing key. |
 | `dev_stack_claude_code_repo_uri` | derived from the channel | Anthropic's apt repository for the channel. |
+| `dev_stack_install_gh` | `false` | Install gh from GitHub's apt repository. |
+| `dev_stack_gh_gpg_url` | GitHub's key URL | GitHub's apt signing key. |
+| `dev_stack_gh_repo_uri` | `https://cli.github.com/packages` | GitHub's apt repository for gh. |
 | `dev_stack_install_zsh` | `true` | Install zsh and oh-my-zsh. |
 | `dev_stack_set_user_shell` | `true` | Make zsh the login shell (needed for the `~/.zshenv` hook). |
 | `dev_stack_ohmyzsh_repo` | the oh-my-zsh GitHub URL | Where oh-my-zsh is cloned from. |
@@ -194,14 +202,16 @@ values in [`defaults/main.yml`](defaults/main.yml).
 (`get_url` skips when the file exists). Bump `dev_stack_devpod_version` and
 re-run to upgrade.
 
-**Claude Code behind a proxy:** the role downloads the signing key with curl as the
+**Claude Code and gh behind a proxy:** the role downloads each signing key with curl as the
 connecting user, so that user's proxy variables apply. curl, not `get_url`: Python 3.13
 and later refuse a TLS-inspecting proxy's CA whose Basic Constraints are not marked
-critical, and curl accepts it once the CA is in the system trust store. apt fetches as root and needs its own proxy
-setting in `/etc/apt/apt.conf.d/` (`Acquire::http::Proxy` and `Acquire::https::Proxy`).
-Claude Code runs as the user and takes its proxy and CA from the user's environment: set
-`HTTPS_PROXY`/`https_proxy` and `NO_PROXY` for the proxy, and `NODE_EXTRA_CA_CERTS` where
-TLS inspection replaces certificates.
+critical, and curl accepts it once the CA is in the system trust store. apt fetches as
+root and needs its own proxy setting in `/etc/apt/apt.conf.d/` (`Acquire::http::Proxy`
+and `Acquire::https::Proxy`). This holds for both apt repositories, Anthropic's and
+GitHub's. Claude Code and gh run as the user and take their proxy from the user's
+environment: set `HTTPS_PROXY`/`https_proxy` and `NO_PROXY`. Claude Code also needs
+`NODE_EXTRA_CA_CERTS` where TLS inspection replaces certificates; gh, a Go program, uses
+the system trust store.
 
 ## Example playbook
 

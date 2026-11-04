@@ -9,5 +9,6 @@
     dev_stack_install_tea: true
     dev_stack_install_uv: true
     dev_stack_install_claude_code: true
+    dev_stack_install_gh: true
   roles:
     - role: dev-stack

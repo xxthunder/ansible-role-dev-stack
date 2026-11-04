@@ -3,8 +3,8 @@
 # Linux dev host that runs DevPod workspaces. Thin by design: the host is a
 # container host for DevPod. Project toolchains live inside each workspace's
 # .devcontainer, NOT on the host — so this role installs only Docker, the
-# DevPod CLI, tmux, git-lfs, curl, qemu-guest-agent, tea, uv and Claude Code on
-# request, the apt upgrade, the operator's shell (zsh + oh-my-zsh), and a
+# DevPod CLI, tmux, git-lfs, curl, qemu-guest-agent, tea, uv, Claude Code and gh
+# on request, the apt upgrade, the operator's shell (zsh + oh-my-zsh), and a
 # persistent ssh-agent holding the forge-only git identity (the two-identity
 # credential model — see below).
 #
@@ -120,6 +120,15 @@ dev_stack_install_claude_code: false
 dev_stack_claude_code_channel: "stable"
 dev_stack_claude_code_gpg_url: "https://downloads.claude.ai/keys/claude-code.asc"
 dev_stack_claude_code_repo_uri: "https://downloads.claude.ai/claude-code/apt/{{ dev_stack_claude_code_channel }}"
+
+# --- gh (GitHub CLI) ---------------------------------------------------------
+# A coding agent on the host that opens pull requests on GitHub needs gh. Off by
+# default. It comes from GitHub's apt repository, so `apt upgrade` updates it.
+# The role does not log in: run `gh auth login` once per host. The signing key
+# is fetched fresh on every run, never pinned: GitHub rotated it in 2026.
+dev_stack_install_gh: false
+dev_stack_gh_gpg_url: "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+dev_stack_gh_repo_uri: "https://cli.github.com/packages"
 
 # --- Shell (zsh + oh-my-zsh) -------------------------------------------------
 # The operator's interactive shell on the host. zsh is also load-bearing for the
