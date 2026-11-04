@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# The gate: every deterministic check of this role. Exit 0 only when all named checks pass.
+# Usage: scripts/gate [lint|shell|molecule]...   (no argument runs all three, in that order)
+set -euo pipefail
+
+usage() { echo "usage: scripts/gate [lint|shell|molecule]..." >&2; exit 2; }
+
+for check in "$@"; do
+  case "$check" in
+    lint | shell | molecule) ;;
+    *) echo "scripts/gate: unknown check '$check'" >&2; usage ;;
+  esac
+done
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+root=$PWD
+
+# The role is named dev-stack; the checkout directory may not be.
+roles=$(mktemp -d)
+trap 'rm -rf "$roles"' EXIT
+ln -s "$root" "$roles/dev-stack"
+export ANSIBLE_ROLES_PATH=$roles
+
+# ansible-core supports Python up to 3.14 and crashes at import on 3.15 (ARDS-008).
+# uv takes the newest Python it finds unless told otherwise; move this on deliberately.
+python=3.14
+
+# Run a uvx tool on the pinned Python, after checking that its environment really is on it.
+# usage: tool <uvx options...> -- <command...>
+tool() {
+  local opts=()
+  while [ "$1" != "--" ]; do opts+=("$1"); shift; done
+  shift
+  local got
+  got=$(uvx --python "$python" "${opts[@]}" python -c \
+    'import sys; print("%d.%d" % sys.version_info[:2])')
+  if [ "$got" != "$python" ]; then
+    echo "scripts/gate: wanted Python $python, got $got" >&2
+    exit 1
+  fi
+  echo "--- Python $got"
+  uvx --python "$python" "${opts[@]}" "$@"
+}
+
+run_lint() { tool --from ansible-lint -- ansible-lint; }
+run_shell() {
+  local t
+  for t in tests/*.sh; do
+    echo "== $t"
+    "./$t"
+  done
+}
+run_molecule() {
+  tool --from molecule --with ansible-core --with 'molecule-plugins[docker]' --with docker -- \
+    molecule test --all
+}
+
+checks=("$@")
+[ ${#checks[@]} -gt 0 ] || checks=(lint shell molecule)
+for check in "${checks[@]}"; do
+  echo "=== gate: $check"
+  "run_$check"
+done
+echo "=== gate: green (${checks[*]})"

@@ -9,10 +9,6 @@ name: CI
 permissions:
   contents: read
 
-# The runner's pip announces its own upgrades; that says nothing about the role.
-env:
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-
 defaults:
   run:
     working-directory: "dev-stack"
@@ -26,16 +22,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: "dev-stack"
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.14"
-      - name: Install test dependencies
-        run: pip3 install ansible-core ansible-lint
-      - name: Run ansible-lint
-        run: ansible-lint
-        env:
-          ANSIBLE_ROLES_PATH: ".."
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+      - name: Run the lint gate
+        run: ./scripts/gate lint
 
   shell-tests:
     name: shell tests
@@ -48,10 +38,7 @@ jobs:
       - name: Install zsh
         run: sudo apt-get update && sudo apt-get install -y zsh
       - name: Run the agent tests
-        run: |
-          ./tests/test_agent_convergence.sh
-          ./tests/test_agent_selection.sh
-          ./tests/test_role_hygiene.sh
+        run: ./scripts/gate shell
 
   molecule:
     name: molecule
@@ -61,15 +48,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: "dev-stack"
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.14"
-      - name: Install test dependencies
-        run: pip3 install ansible-core "molecule-plugins[docker]" docker
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
       - name: Run Molecule tests
-        run: molecule test --all
+        run: ./scripts/gate molecule
         env:
-          ANSIBLE_ROLES_PATH: ${{ github.workspace }}
           ANSIBLE_FORCE_COLOR: "1"
           PY_COLORS: "1"
