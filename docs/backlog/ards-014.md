@@ -2,8 +2,8 @@
 
 **Status**: Open
 **Priority**: Medium
-**Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
-test scenario
+**Component**: `tasks/main.yml`, `tasks/apt_repo.yml` (new), `defaults/main.yml`,
+`meta/argument_specs.yml`, `README.md`, test scenario
 **Related**: [ARDS-007](ards-007.md) — `tea`, the forge CLI for Gitea;
 [ARDS-013](ards-013.md) — Claude Code from an apt repository, the pattern this follows;
 [ARDS-012](ards-012.md) — `become` drops the proxy variables
@@ -41,7 +41,29 @@ a second source for the same repository:
 the user's proxy variables; apt fetches as root with its own proxy setting; `gh` runs as the
 user and takes `HTTPS_PROXY` from the user's environment.
 
+*One block for both repositories.* The Claude Code block (ARDS-013) does seven steps: install
+`curl` and `python3-debian`, create a temp file, download the key into it as the user, make
+`/etc/apt/keyrings`, copy the key as root, add the deb822 source, install the package — and
+remove the temp file in `always:`. `gh` needs the same seven steps with other values. They
+move into `tasks/apt_repo.yml`, included once for Claude Code and once for `gh`.
+
+*curl.* Today the role installs `curl` only inside the Claude Code block, so a host without
+Claude Code has no guaranteed `curl` — although the operator uses it and the key downloads
+need it. It moves into `dev_stack_base_packages`.
+
 **Scope Decisions**:
+- **A shared task file, not a second copy** (refinement 2026-11-04). `tasks/apt_repo.yml`
+  takes the key URL, the keyring file name, the source name, URI, suite and package as
+  parameters. The Claude Code block becomes its first caller; its behaviour, its paths and
+  its check-mode tolerance stay as they are.
+- **`curl` becomes a base package** (refinement 2026-11-04), so the shared file only installs
+  `python3-debian`. This widens the item beyond `gh`; it is in because the shared file needs
+  it.
+- **Docker stays out.** Its key comes through `get_url`, which fails behind a TLS-inspecting
+  proxy (see ARDS-013), but the WSL consumer runs Podman. Moving Docker onto the shared file
+  is its own item, when a Docker host behind such a proxy needs it.
+- **The consumer switch stays out.** Setting `dev_stack_install_gh: true` in the WSL playbook
+  is a change in the consuming repository, after this item ships.
 - **Off by default.** Not every consumer uses GitHub; `dev_stack_install_gh` turns it on.
 - **apt, the same block shape as ARDS-013.** Key downloaded as the connecting user
   (`become: false`) into a temp file and copied as root; `python3-debian` installed before
@@ -58,6 +80,9 @@ user and takes `HTTPS_PROXY` from the user's environment.
 - [ ] On a host where `gh` was installed by hand with these paths, a run reports no second
       source and changes at most the files' content
 - [ ] A re-run changes nothing; with the variable `false` the role touches nothing of `gh`
+- [ ] Claude Code and `gh` both install through `tasks/apt_repo.yml`; on a host with Claude
+      Code already installed, a run after the change reports no change for it
+- [ ] `curl` is in `dev_stack_base_packages` and installed with every other base package
 - [ ] The README lists the option and that `gh auth login` stays with the operator
 - [ ] The test scenario covers the install
 - [ ] CI is green after the push
