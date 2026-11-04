@@ -9,6 +9,12 @@
 #   dev_stack_apt_repo_suite    suite (release channel)
 #   dev_stack_apt_repo_package  package to install
 # Component main and architecture amd64 are fixed.
+- name: "Forget the temp file of an earlier include before {{ dev_stack_apt_repo_label }}"
+  # A fact outlives the include; if the tempfile step below fails, `always:`
+  # must not remove the earlier include's path.
+  ansible.builtin.set_fact:
+    dev_stack_apt_repo_key_tmp: {}
+
 - name: "Install {{ dev_stack_apt_repo_label }}"
   # On a fresh host --check does not write the apt repository, so the package
   # is unresolvable (deb822_repository / apt); tolerated in check mode only.

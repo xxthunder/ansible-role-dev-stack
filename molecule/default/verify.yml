@@ -42,6 +42,23 @@
         src: /etc/apt/sources.list.d/claude-code.sources
       register: claude_sources
 
+    - name: Run gh as the login user
+      become: true
+      become_user: vmuser
+      ansible.builtin.command: gh --version
+      changed_when: false
+      register: gh_version
+
+    - name: Read the gh apt repository
+      ansible.builtin.slurp:
+        src: /etc/apt/sources.list.d/github-cli.sources
+      register: gh_sources
+
+    - name: Stat the gh signing key
+      ansible.builtin.stat:
+        path: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+      register: gh_keyring
+
     - name: Run git-lfs
       ansible.builtin.command: git-lfs version
       changed_when: false
@@ -72,6 +89,13 @@
           - claude_version.stdout is search('Claude Code')
           - "'downloads.claude.ai/claude-code/apt/stable' in (claude_sources.content | b64decode)"
           - "'Suites: stable' in (claude_sources.content | b64decode)"
+          - gh_version.stdout is search('^gh version ')
+          - "'cli.github.com/packages' in (gh_sources.content | b64decode)"
+          - "'Suites: stable' in (gh_sources.content | b64decode)"
+          - "'Signed-By: /etc/apt/keyrings/githubcli-archive-keyring.gpg' in (gh_sources.content | b64decode)"
+          - gh_keyring.stat.exists
+          - gh_keyring.stat.mode == '0644'
+          - gh_keyring.stat.pw_name == 'root'
 
     - name: Assert qemu-guest-agent is not installed by default
       ansible.builtin.assert:

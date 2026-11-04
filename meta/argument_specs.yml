@@ -92,6 +92,15 @@ argument_specs:
       dev_stack_claude_code_repo_uri:
         type: str
         description: URI of the apt repository; derived from the channel.
+      dev_stack_install_gh:
+        type: bool
+        description: Install gh, the GitHub CLI, from GitHub's apt repository.
+      dev_stack_gh_gpg_url:
+        type: str
+        description: Download URL of the repository's signing key.
+      dev_stack_gh_repo_uri:
+        type: str
+        description: URI of the apt repository.
       dev_stack_install_zsh:
         type: bool
         description: Install zsh and oh-my-zsh for the user.

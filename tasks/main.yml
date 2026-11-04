@@ -219,6 +219,19 @@
     dev_stack_apt_repo_package: claude-code
   when: dev_stack_install_claude_code | bool
 
+# --- gh (GitHub CLI) ---------------------------------------------------------
+- name: Install gh
+  ansible.builtin.include_tasks: apt_repo.yml
+  vars:
+    dev_stack_apt_repo_label: gh
+    dev_stack_apt_repo_key_url: "{{ dev_stack_gh_gpg_url }}"
+    dev_stack_apt_repo_keyring: githubcli-archive-keyring.gpg
+    dev_stack_apt_repo_name: github-cli
+    dev_stack_apt_repo_uri: "{{ dev_stack_gh_repo_uri }}"
+    dev_stack_apt_repo_suite: stable
+    dev_stack_apt_repo_package: gh
+  when: dev_stack_install_gh | bool
+
 # --- Linger (the user manager without a login) ------------------------------
 - name: Enable linger so user services run without an active login
   # Lets the systemd --user instance — and with it the persistent agent and the
