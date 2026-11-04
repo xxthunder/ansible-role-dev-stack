@@ -60,6 +60,7 @@
       ansible.builtin.assert:
         that:
           - "'tmux' in ansible_facts.packages"
+          - "'curl' in ansible_facts.packages"
           - "'zsh' in ansible_facts.packages"
           - devpod_bin.stat.exists and devpod_bin.stat.executable
           - "'PasswordAuthentication no' in (sshd_dropin.content | b64decode)"

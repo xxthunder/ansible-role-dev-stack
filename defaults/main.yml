@@ -3,7 +3,7 @@
 # Linux dev host that runs DevPod workspaces. Thin by design: the host is a
 # container host for DevPod. Project toolchains live inside each workspace's
 # .devcontainer, NOT on the host — so this role installs only Docker, the
-# DevPod CLI, tmux, git-lfs, qemu-guest-agent, tea, uv and Claude Code on
+# DevPod CLI, tmux, git-lfs, curl, qemu-guest-agent, tea, uv and Claude Code on
 # request, the apt upgrade, the operator's shell (zsh + oh-my-zsh), and a
 # persistent ssh-agent holding the forge-only git identity (the two-identity
 # credential model — see below).
@@ -24,12 +24,15 @@ dev_stack_apt_upgrade: true
 # long-running sessions alive across disconnects — kept in ONE place (the host)
 # rather than baked into every devcontainer. git-lfs (it pulls in git) serves
 # the git that runs on the host — an editor over Remote-SSH, the agent; Debian's
-# package sets the LFS filters in /etc/gitconfig itself. Other dev tools belong
-# in the devcontainer, not here.
+# package sets the LFS filters in /etc/gitconfig itself. curl is what the
+# operator and the apt-repository key downloads use. Keep curl when you override
+# this list; the key downloads need it. Other dev tools belong in the
+# devcontainer, not here.
 dev_stack_base_packages:
   - ca-certificates
   - tmux
   - git-lfs
+  - curl
 
 # --- VM guest agent ------------------------------------------------------------
 # Install and start qemu-guest-agent, which reports the guest IP and heartbeat to
