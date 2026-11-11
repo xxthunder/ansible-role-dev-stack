@@ -14,3 +14,20 @@
         name: vmuser
         create_home: true
         shell: /bin/bash
+
+    - name: Create the user's ~/.local/bin
+      ansible.builtin.file:
+        path: /home/vmuser/.local/bin
+        state: directory
+        owner: vmuser
+        group: vmuser
+        mode: "0755"
+
+    # The consumer's own python link. The role must leave it as it is.
+    - name: Link the user's own python to the system python
+      ansible.builtin.file:
+        src: /usr/bin/python3
+        dest: /home/vmuser/.local/bin/python
+        state: link
+        owner: vmuser
+        group: vmuser
