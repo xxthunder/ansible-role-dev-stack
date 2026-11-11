@@ -10,5 +10,6 @@
     dev_stack_install_uv: true
     dev_stack_install_claude_code: true
     dev_stack_install_gh: true
+    dev_stack_install_build_prerequisites: true
   roles:
     - role: dev-stack

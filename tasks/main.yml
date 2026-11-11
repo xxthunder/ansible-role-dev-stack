@@ -206,6 +206,11 @@
         label: "{{ item.item }}"
       when: item.stat.exists
 
+# --- Build prerequisites (C/C++ product line) --------------------------------
+- name: Install the build prerequisites
+  ansible.builtin.include_tasks: build_prerequisites.yml
+  when: dev_stack_install_build_prerequisites | bool
+
 # --- Claude Code (coding agent) ----------------------------------------------
 - name: Install Claude Code
   ansible.builtin.include_tasks: apt_repo.yml
