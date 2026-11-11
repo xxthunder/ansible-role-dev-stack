@@ -57,6 +57,9 @@ serves more than one version.
 - **The option needs uv and says so** (2026-11-11): with the option on and
   `dev_stack_install_uv` off, the run fails early with a message that names the missing
   option. The role does not turn on uv by itself.
+- **Poetry reaches the PATH through a link** (2026-11-11): the role links `poetry` from the
+  login user's uv tool install into `dev_stack_uv_bin_dir`. It works in every login shell and
+  touches no shell configuration.
 
 **Acceptance Criteria**:
 - [ ] With the option on, the role installs `libc6-dev`, `build-essential`, `7zip` and `pipx`
