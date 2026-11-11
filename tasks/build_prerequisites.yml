@@ -1,0 +1,46 @@
+---
+# Build prerequisites of a C/C++ product line (CMake, Poetry), on request.
+# Runs from main.yml, or alone through
+# `include_role: tasks_from: build_prerequisites` with dev_stack_user and
+# dev_stack_user_home passed as vars.
+
+# --- Pick the uv -------------------------------------------------------------
+# The user's own uv comes first, as on their PATH; the role's uv is the fallback.
+# Fail before anything is installed when there is neither.
+- name: Look for uv in the user's ~/.local/bin
+  ansible.builtin.stat:
+    path: "{{ dev_stack_user_home }}/.local/bin/uv"
+  register: dev_stack_build_user_uv
+
+- name: Look for the role's uv in the bin dir
+  ansible.builtin.stat:
+    path: "{{ dev_stack_uv_bin_dir }}/uv"
+  register: dev_stack_build_role_uv
+
+- name: Pick the uv for the build prerequisites
+  ansible.builtin.set_fact:
+    dev_stack_build_uv: >-
+      {{ dev_stack_build_user_uv.stat.path if dev_stack_build_user_uv.stat.exists
+      else dev_stack_build_role_uv.stat.path if dev_stack_build_role_uv.stat.exists
+      else dev_stack_uv_bin_dir ~ '/uv' }}
+  # Under --check on a fresh host the role's uv is not installed yet; the uv tasks
+  # tolerate check-mode errors, so the path it will have is enough. Outside check
+  # mode, no uv fails below.
+  when: >-
+    dev_stack_build_user_uv.stat.exists or dev_stack_build_role_uv.stat.exists
+    or (ansible_check_mode and dev_stack_install_uv | bool)
+
+- name: Fail when there is no uv
+  ansible.builtin.fail:
+    msg: >-
+      The build prerequisites need uv. Set dev_stack_install_uv: true, or install
+      uv for {{ dev_stack_user }} in ~/.local/bin.
+  when: dev_stack_build_uv is not defined
+
+# --- apt packages ------------------------------------------------------------
+- name: Install the build packages
+  ansible.builtin.apt:
+    name: "{{ dev_stack_build_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600

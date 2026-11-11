@@ -96,6 +96,10 @@
           - gh_keyring.stat.exists
           - gh_keyring.stat.mode == '0644'
           - gh_keyring.stat.pw_name == 'root'
+          - "'libc6-dev' in ansible_facts.packages"
+          - "'build-essential' in ansible_facts.packages"
+          - "'7zip' in ansible_facts.packages"
+          - "'pipx' in ansible_facts.packages"
 
     - name: Assert qemu-guest-agent is not installed by default
       ansible.builtin.assert:

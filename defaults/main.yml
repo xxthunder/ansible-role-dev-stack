@@ -108,6 +108,22 @@ dev_stack_uv_url: "https://github.com/astral-sh/uv/releases/download/{{ dev_stac
 dev_stack_uv_home: "/opt/uv"
 dev_stack_uv_bin_dir: "/usr/local/bin"
 
+# --- Build prerequisites (C/C++ product line) --------------------------------
+# What a CMake/Poetry product line needs to build on the host itself, outside
+# its dev container. Off by default. It builds on uv, which must be there: the
+# user's own in ~/.local/bin, or the role's (dev_stack_install_uv).
+dev_stack_install_build_prerequisites: false
+# apt packages the product line's bare-Linux job provisions as root.
+dev_stack_build_packages:
+  - libc6-dev
+  - build-essential
+  - 7zip
+  - pipx
+# CPython versions uv installs for the user, next to the ones uv fetches itself.
+dev_stack_build_pythons: ["3.11"]
+# Poetry release installed for the user through `uv tool install`.
+dev_stack_poetry_version: "2.4.1"
+
 # --- Claude Code (coding agent) ----------------------------------------------
 # The coding agent runs on the host. Off by default. It comes from Anthropic's
 # apt repository, so `apt upgrade` updates it with the rest of the host and it

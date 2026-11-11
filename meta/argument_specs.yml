@@ -79,6 +79,20 @@ argument_specs:
       dev_stack_uv_bin_dir:
         type: str
         description: Where the uv and uvx links are placed.
+      dev_stack_install_build_prerequisites:
+        type: bool
+        description: Install the build prerequisites of a C/C++ product line (apt packages, CPython, Poetry); needs uv.
+      dev_stack_build_packages:
+        type: list
+        elements: str
+        description: apt packages the build prerequisites install.
+      dev_stack_build_pythons:
+        type: list
+        elements: str
+        description: CPython versions uv installs for the user.
+      dev_stack_poetry_version:
+        type: str
+        description: Poetry release installed for the user through uv.
       dev_stack_install_claude_code:
         type: bool
         description: Install Claude Code, the coding agent, from Anthropic's apt repository.
