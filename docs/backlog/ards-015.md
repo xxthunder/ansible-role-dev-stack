@@ -49,12 +49,14 @@ serves more than one version.
   Poetry.
 - **No project checkout, no `build.sh` run.** Cloning the project and running its gate stay
   with the operator.
-
-**Open questions**:
-- Is Poetry installed through pipx at a pinned version (the project pins 2.4.1), or through uv
-  (`uv tool install poetry`), which is already on the host and needs no `pipx`? `pipx` stays in
-  the apt list either way, because the project's scripts call it.
-- Which CPython versions does the option take: one version, or a list?
+- **Poetry through uv, pinned** (2026-11-11): the role runs `uv tool install poetry==<version>`
+  as the login user. uv is already on the host, so Poetry needs no pipx. `pipx` stays in the
+  apt list, because the project's scripts call it.
+- **A list of CPython versions** (2026-11-11): the option takes a list, so one host serves
+  both product lines (3.11 for SPLED, 3.13 for SPLE-2784).
+- **The option needs uv and says so** (2026-11-11): with the option on and
+  `dev_stack_install_uv` off, the run fails early with a message that names the missing
+  option. The role does not turn on uv by itself.
 
 **Acceptance Criteria**:
 - [ ] With the option on, the role installs `libc6-dev`, `build-essential`, `7zip` and `pipx`
