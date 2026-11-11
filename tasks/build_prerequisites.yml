@@ -44,3 +44,100 @@
     state: present
     update_cache: true
     cache_valid_time: 3600
+
+# --- CPython and Poetry through uv -------------------------------------------
+# uv runs as the login user, because both land in that user's home. `become`
+# drops the connecting user's proxy and CA variables, so one task reads them
+# and every uv task passes them on through `environment:`. uv downloads itself,
+# so neither get_url nor curl is involved.
+# Only the eight names are read, never the whole environment: a proxy URL can carry
+# credentials, and -v or a callback would print the registered result. `printenv`
+# with several names prints values without names, so `sh -c` filters `env` with a
+# fixed pattern. grep exits 1 when none is set, which is fine.
+- name: Read the proxy and CA variables of the connecting user
+  become: false
+  check_mode: false
+  changed_when: false
+  no_log: true
+  ansible.builtin.command:
+    argv:
+      - sh
+      - -c
+      - env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|NO_PROXY|http_proxy|https_proxy|no_proxy|SSL_CERT_FILE|SSL_CERT_DIR)=' || true
+  register: dev_stack_build_env_dump
+
+# set_fact runs on the controller side of the connection and needs no become.
+- name: Keep the connecting user's proxy and CA variables
+  no_log: true
+  ansible.builtin.set_fact:
+    dev_stack_connecting_env: >-
+      {%- set names = ['HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy',
+      'https_proxy', 'no_proxy', 'SSL_CERT_FILE', 'SSL_CERT_DIR'] -%}
+      {%- set ns = namespace(found={}) -%}
+      {%- for line in dev_stack_build_env_dump.stdout_lines -%}
+      {%- set pair = line.split('=', 1) -%}
+      {%- if pair | length == 2 and pair[0] in names -%}
+      {%- set ns.found = ns.found | combine({pair[0]: pair[1]}) -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {{ ns.found }}
+
+# Never --default: that would create ~/.local/bin/python, which is the user's.
+# uv prints "Installed ..." to stderr when it installs something, and
+# "... is already installed" when it does not.
+- name: Install the CPython versions for the login user
+  become: true
+  become_user: "{{ dev_stack_user }}"
+  environment: "{{ dev_stack_connecting_env }}"
+  ansible.builtin.command:
+    argv:
+      - "{{ dev_stack_build_uv }}"
+      - python
+      - install
+      - "{{ item }}"
+  loop: "{{ dev_stack_build_pythons }}"
+  register: dev_stack_build_python_install
+  changed_when: >-
+    (dev_stack_build_python_install.stderr ~ dev_stack_build_python_install.stdout)
+    is search('^Installed ', multiline=True)
+  ignore_errors: "{{ ansible_check_mode }}"
+
+# A different pinned version replaces the installed one: uv prints "Installed ..."
+# then. The same version prints "... is already installed".
+- name: Install Poetry for the login user
+  become: true
+  become_user: "{{ dev_stack_user }}"
+  environment: "{{ dev_stack_connecting_env }}"
+  ansible.builtin.command:
+    argv:
+      - "{{ dev_stack_build_uv }}"
+      - tool
+      - install
+      - "poetry=={{ dev_stack_poetry_version }}"
+  register: dev_stack_build_poetry_install
+  changed_when: >-
+    (dev_stack_build_poetry_install.stderr ~ dev_stack_build_poetry_install.stdout)
+    is search('^Installed ', multiline=True)
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Ask uv for the tool bin dir of the login user
+  become: true
+  become_user: "{{ dev_stack_user }}"
+  environment: "{{ dev_stack_connecting_env }}"
+  check_mode: false
+  changed_when: false
+  ansible.builtin.command:
+    argv:
+      - "{{ dev_stack_build_uv }}"
+      - tool
+      - dir
+      - --bin
+  register: dev_stack_build_tool_bin
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Link poetry onto the PATH
+  ansible.builtin.file:
+    src: "{{ dev_stack_build_tool_bin.stdout | trim }}/poetry"
+    dest: "{{ dev_stack_uv_bin_dir }}/poetry"
+    state: link
+  when: dev_stack_build_tool_bin is succeeded
