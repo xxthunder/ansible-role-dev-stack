@@ -73,6 +73,31 @@
         database: passwd
         key: vmuser
 
+    - name: Run Poetry in the login shell of the login user
+      become: true
+      become_user: vmuser
+      ansible.builtin.command: "{{ ansible_facts.getent_passwd.vmuser[5] }} -l -c 'poetry --version'"
+      changed_when: false
+      register: poetry_version
+
+    - name: List the CPython versions uv manages for the login user
+      become: true
+      become_user: vmuser
+      ansible.builtin.command: /usr/local/bin/uv python list --only-installed --managed-python
+      changed_when: false
+      register: uv_pythons
+
+    - name: Stat the user's own python link without following it
+      ansible.builtin.stat:
+        path: /home/vmuser/.local/bin/python
+        follow: false
+      register: user_python_link
+
+    - name: Stat the poetry link in the bin dir
+      ansible.builtin.stat:
+        path: /usr/local/bin/poetry
+      register: poetry_link
+
     - name: Assert the stack is in place
       ansible.builtin.assert:
         that:
@@ -100,6 +125,12 @@
           - "'build-essential' in ansible_facts.packages"
           - "'7zip' in ansible_facts.packages"
           - "'pipx' in ansible_facts.packages"
+          - poetry_version.stdout is search('^Poetry \\(version 2[.]4[.]1\\)')
+          - "'cpython-3.11.' in uv_pythons.stdout"
+          - "'cpython-3.13.' in uv_pythons.stdout"
+          - user_python_link.stat.islnk
+          - user_python_link.stat.lnk_target == '/usr/bin/python3'
+          - poetry_link.stat.islnk
 
     - name: Assert qemu-guest-agent is not installed by default
       ansible.builtin.assert:

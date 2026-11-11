@@ -1,7 +1,9 @@
 ---
 # dev-stack — host software stack for a headless Linux dev host that runs
 # DevPod workspaces. Deliberately thin: the host is a container host for DevPod.
-# Project toolchains live INSIDE each workspace's .devcontainer, not on the host.
+# Project toolchains live INSIDE each workspace's .devcontainer, not on the host;
+# the one exception, on request, is the build prerequisites of a C/C++ product line
+# (dev_stack_install_build_prerequisites).
 # The host adds tmux as the session-persistence layer — one place, not
 # per-devcontainer. So this installs: apt upgrade, tmux, Docker (the DevPod
 # runtime), the DevPod CLI, and qemu-guest-agent on request. It also sets up

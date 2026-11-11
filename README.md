@@ -10,7 +10,8 @@ project toolchains live in [DevPod](https://devpod.sh/) workspaces.
 
 Thin by design: the host is a container host for DevPod. Each project's
 toolchain lives in its own `.devcontainer`, not on the host, and this role
-installs no toolchain, and a coding agent only on request. The host carries only
+installs no toolchain, except on request the build prerequisites of a C/C++ product
+line (`dev_stack_install_build_prerequisites`), and a coding agent only on request. The host carries only
 what is needed to run and reach workspaces, plus the operator's shell and a git
 identity that outlives a disconnect.
 
@@ -47,6 +48,21 @@ identity that outlives a disconnect.
   repository; `apt upgrade` updates it. The signing key is fetched fresh on every run,
   because GitHub rotated it in 2026. The login stays with the operator: `gh auth login`
   once per host.
+- **Build prerequisites**, only with `dev_stack_install_build_prerequisites: true`: what a
+  CMake/Poetry product line needs to build on the host itself, outside its dev container.
+  The apt packages in `dev_stack_build_packages`, the CPython versions in
+  `dev_stack_build_pythons` and a pinned Poetry (`dev_stack_poetry_version`), the last two
+  installed for the login user through uv. It needs a uv: the user's own in
+  `~/.local/bin`, else the role's (`dev_stack_install_uv: true`); with neither the role
+  stops before it installs anything. The user's `python` stays as it is: uv installs the
+  CPythons without `--default`, so it puts versioned links (`python3.11`, ...) into
+  `~/.local/bin` and leaves `python` alone. A `~/.local/bin/poetry` that pipx installed
+  earlier makes `uv tool install` fail ("executable already exists"): run
+  `pipx uninstall poetry` first.
+  `poetry` is linked into `dev_stack_uv_bin_dir`. uv runs as the login user, so the role
+  hands it the connecting user's proxy and CA variables (`HTTP_PROXY`, `HTTPS_PROXY`,
+  `NO_PROXY`, their lower-case forms, `SSL_CERT_FILE`, `SSL_CERT_DIR`, those that are set).
+  The role checks out no project.
 - **Claude Code**, only with `dev_stack_install_claude_code: true`: the coding agent, for
   one that runs on the host. It comes from Anthropic's signed apt repository, channel
   `stable` by default or `latest`. `apt upgrade` updates it; it never updates itself. The
@@ -190,6 +206,10 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | `dev_stack_install_gh` | `false` | Install gh from GitHub's apt repository. |
 | `dev_stack_gh_gpg_url` | GitHub's key URL | GitHub's apt signing key. |
 | `dev_stack_gh_repo_uri` | `https://cli.github.com/packages` | GitHub's apt repository for gh. |
+| `dev_stack_install_build_prerequisites` | `false` | Install the build prerequisites of a C/C++ product line; needs a uv. |
+| `dev_stack_build_packages` | `libc6-dev`, `build-essential`, `7zip`, `pipx` | apt packages the build prerequisites install. |
+| `dev_stack_build_pythons` | `["3.11"]` | CPython versions uv installs for the user. |
+| `dev_stack_poetry_version` | `2.4.1` | Poetry release installed for the user; bumping it installs the new one. |
 | `dev_stack_install_zsh` | `true` | Install zsh and oh-my-zsh. |
 | `dev_stack_set_user_shell` | `true` | Make zsh the login shell (needed for the `~/.zshenv` hook). |
 | `dev_stack_ohmyzsh_repo` | the oh-my-zsh GitHub URL | Where oh-my-zsh is cloned from. |

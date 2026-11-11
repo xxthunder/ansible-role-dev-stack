@@ -3,7 +3,8 @@
 # Linux dev host that runs DevPod workspaces. Thin by design: the host is a
 # container host for DevPod. Project toolchains live inside each workspace's
 # .devcontainer, NOT on the host — so this role installs only Docker, the
-# DevPod CLI, tmux, git-lfs, curl, qemu-guest-agent, tea, uv, Claude Code and gh
+# DevPod CLI, tmux, git-lfs, curl, qemu-guest-agent, tea, uv, Claude Code, gh and
+# the build prerequisites of a C/C++ product line (apt packages, CPython, Poetry)
 # on request, the apt upgrade, the operator's shell (zsh + oh-my-zsh), and a
 # persistent ssh-agent holding the forge-only git identity (the two-identity
 # credential model — see below).
