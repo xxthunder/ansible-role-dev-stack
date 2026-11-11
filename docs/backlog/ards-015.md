@@ -54,9 +54,11 @@ serves more than one version.
   apt list, because the project's scripts call it.
 - **A list of CPython versions** (2026-11-11): the option takes a list, so one host serves
   both product lines (3.11 for SPLED, 3.13 for SPLE-2784).
-- **The option needs uv and says so** (2026-11-11): with the option on and
-  `dev_stack_install_uv` off, the run fails early with a message that names the missing
-  option. The role does not turn on uv by itself.
+- **The option needs a uv and says so** (2026-11-11): the role uses the uv the login user
+  already has — a hand-installed one in `~/.local/bin` first, as the shell's PATH finds it,
+  else the role's own in `dev_stack_uv_bin_dir`. With neither there, the run fails early with
+  a message that names `dev_stack_install_uv`. The role does not turn on uv by itself. A
+  host that runs the play on itself keeps its hand-installed uv (README → Requirements).
 - **Poetry reaches the PATH through a link** (2026-11-11): the role links `poetry` from the
   login user's uv tool install into `dev_stack_uv_bin_dir`. It works in every login shell and
   touches no shell configuration.
