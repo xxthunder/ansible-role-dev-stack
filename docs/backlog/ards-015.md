@@ -34,6 +34,12 @@ The packages exist in Debian 13: `7zip` 25.01, `build-essential` 12.12, `pipx` 1
 candidates, checked 2026-11-04). Debian's `python3-poetry` is 2.1.2, older than the 2.4.1 the
 project pins.
 
+A second product line hit the same gap on 2026-11-11 (SPLE-2784). Its pipeline installs gcc
+15.2, clang 20, CMake and Ninja through poks, but on the host neither compiler can link a
+program: `ld: cannot find Scrt1.o` and `crti.o`, which `libc6-dev` provides. Its report tests
+then fail on the missing `7z`. That product line needs CPython 3.13, not 3.11, so the option
+serves more than one version.
+
 **Scope Decisions**:
 - **Off by default**, like every other tool installed on request: not every host builds C/C++.
 - **Generic, not project-specific.** The option installs the build prerequisites. It knows
