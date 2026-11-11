@@ -29,3 +29,44 @@
           - linger.stat.exists
           - agent_socket.status.ActiveState == 'active'
         fail_msg: "linger={{ linger.stat.exists }} ssh-agent.socket={{ agent_socket.status.ActiveState }}"
+
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+
+    - name: Stat the poetry link
+      ansible.builtin.stat:
+        path: /usr/local/bin/poetry
+      register: poetry_link
+
+    - name: Assert the role touched no build prerequisite while the option is off
+      ansible.builtin.assert:
+        that:
+          - "'7zip' not in ansible_facts.packages"
+          - "'pipx' not in ansible_facts.packages"
+          - not poetry_link.stat.exists
+        fail_msg: the build prerequisites are off by default; the role must not install them.
+
+    - name: Run the build prerequisites without any uv
+      block:
+        - name: Include the build prerequisites tasks
+          ansible.builtin.include_role:
+            name: dev-stack
+            tasks_from: build_prerequisites
+          vars:
+            dev_stack_user: vmuser
+            dev_stack_user_home: /home/vmuser
+            dev_stack_install_build_prerequisites: true
+
+        - name: Fail, because the tasks did not fail
+          ansible.builtin.fail:
+            msg: the build prerequisites ran without a uv
+      rescue:
+        - name: Gather package facts again
+          ansible.builtin.package_facts:
+
+        - name: Assert the failure names dev_stack_install_uv and nothing was installed
+          ansible.builtin.assert:
+            that:
+              - ansible_failed_result.msg is search('dev_stack_install_uv')
+              - "'7zip' not in ansible_facts.packages"
+              - "'pipx' not in ansible_facts.packages"
