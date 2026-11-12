@@ -20,11 +20,11 @@
 - [ARDS-004b — A mistyped `dev_stack_user` is created instead of failing](ards-004b.md)
 
 ### In Progress
-- [ARDS-015 — Install the build prerequisites of a C/C++ product line on the host, on request](ards-015.md)
 - [ARDS-004 — Harden the role: findings from its first review](ards-004.md)
 - [ARDS-001 — Backlog refinement](ards-001.md)
 
 ### Done
+- [ARDS-015 — Install the build prerequisites of a C/C++ product line on the host, on request](ards-015.md)
 - [ARDS-014 — Install `gh`, the GitHub CLI, from GitHub's apt repository, on request](ards-014.md)
 - [ARDS-013 — Install Claude Code from Anthropic's apt repository, on request](ards-013.md)
 - [ARDS-011 — Document the bootstrap of a host that runs the play on itself](ards-011.md)

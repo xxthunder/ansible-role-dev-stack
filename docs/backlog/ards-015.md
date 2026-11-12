@@ -1,6 +1,6 @@
-# [ARDS-015] Install the build prerequisites of a C/C++ product line on the host, on request
+# [ARDS-015] ✅ DONE - Install the build prerequisites of a C/C++ product line on the host, on request
 
-**Status**: In Progress
+**Status**: Done (2026-11-12)
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
@@ -67,14 +67,14 @@ serves more than one version.
   `["3.13"]`; a host that needs another version sets the list.
 
 **Acceptance Criteria**:
-- [ ] With the option on, the role installs `libc6-dev`, `build-essential`, `7zip` and `pipx`
+- [x] With the option on, the role installs `libc6-dev`, `build-essential`, `7zip` and `pipx`
       through apt
-- [ ] With the option on, the login user has Poetry at the configured version and the
+- [x] With the option on, the login user has Poetry at the configured version and the
       configured CPython through uv; `poetry --version` runs in a login shell
-- [ ] `~/.local/bin/python` is unchanged by a run
-- [ ] A re-run changes nothing; with the option off the role touches none of it
-- [ ] The README lists the option and its variables
-- [ ] The test scenario covers the install
-- [ ] On the WSL consumer, with the option on, SPLED's
+- [x] `~/.local/bin/python` is unchanged by a run
+- [x] A re-run changes nothing; with the option off the role touches none of it
+- [x] The README lists the option and its variables
+- [x] The test scenario covers the install
+- [x] On the WSL consumer, with the option on, SPLED's
       `./build.sh --install && ./build.sh --selftests --marker gate_develop_pr` passes on the
       host
