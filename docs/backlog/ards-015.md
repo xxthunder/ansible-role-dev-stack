@@ -62,6 +62,9 @@ serves more than one version.
 - **Poetry reaches the PATH through a link** (2026-11-11): the role links `poetry` from the
   login user's uv tool install into `dev_stack_uv_bin_dir`. It works in every login shell and
   touches no shell configuration.
+- **The default CPython is 3.13** (2026-11-12): SPLED's `develop` now requires Python
+  `>=3.13,<3.14`, so 3.11 no longer serves it. `dev_stack_build_pythons` defaults to
+  `["3.13"]`; a host that needs another version sets the list.
 
 **Acceptance Criteria**:
 - [ ] With the option on, the role installs `libc6-dev`, `build-essential`, `7zip` and `pipx`
