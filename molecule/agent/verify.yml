@@ -38,6 +38,11 @@
         path: /usr/local/bin/poetry
       register: poetry_link
 
+    - name: Stat the ubc binary
+      ansible.builtin.stat:
+        path: /usr/local/bin/ubc
+      register: ubc_bin
+
     - name: Assert the role touched no build prerequisite while the option is off
       ansible.builtin.assert:
         that:
@@ -45,6 +50,12 @@
           - "'pipx' not in ansible_facts.packages"
           - not poetry_link.stat.exists
         fail_msg: the build prerequisites are off by default; the role must not install them.
+
+    - name: Assert ubc is not installed while the option is off
+      ansible.builtin.assert:
+        that:
+          - not ubc_bin.stat.exists
+        fail_msg: ubc is off by default; the role must not install it.
 
     - name: Run the build prerequisites without any uv
       block:

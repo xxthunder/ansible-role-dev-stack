@@ -7,6 +7,7 @@ set -uo pipefail
 TASKS="$(dirname "$0")/../tasks/main.yml"
 APT_REPO="$(dirname "$0")/../tasks/apt_repo.yml"
 BUILD="$(dirname "$0")/../tasks/build_prerequisites.yml"
+UBC="$(dirname "$0")/../tasks/ubc.yml"
 fails=0
 
 check() {
@@ -26,9 +27,9 @@ check "H1: no task touches the user's own ssh-agent.service" \
 # A uv the user installed into ~/.local/bin shadows the role's. It is theirs:
 # the role reports it, never removes it. The only task naming the path stats it.
 # Comment lines are not tasks.
-local_bin=$(cat "$TASKS" "$BUILD" | grep -v '^ *#' | grep -c '\.local/bin/')
-local_bin_stat=$(cat "$TASKS" "$BUILD" | grep -v '^ *#' | grep -B1 '\.local/bin/' | grep -c 'ansible\.builtin\.stat:')
-check "H2: no task but a stat names a path in the user's ~/.local/bin (main.yml, build_prerequisites.yml)" \
+local_bin=$(cat "$TASKS" "$BUILD" "$UBC" 2>/dev/null | grep -v '^ *#' | grep -c '\.local/bin/')
+local_bin_stat=$(cat "$TASKS" "$BUILD" "$UBC" 2>/dev/null | grep -v '^ *#' | grep -B1 '\.local/bin/' | grep -c 'ansible\.builtin\.stat:')
+check "H2: no task but a stat names a path in the user's ~/.local/bin (main.yml, build_prerequisites.yml, ubc.yml)" \
   "$((local_bin - local_bin_stat))" "0"
 
 # An apt repository's signing key is fetched as the connecting user: `become` drops
@@ -66,6 +67,19 @@ read_task=$(awk -v reg="$env_reg" '/^ *- name:/ { if (found) exit; buf="" } { bu
   END { if (found) printf "%s", buf }' "$BUILD" 2>/dev/null)
 check "H5: the task that reads the environment for dev_stack_connecting_env runs become: false" \
   "$(printf '%s' "$read_task" | grep -c 'become: false')" "1"
+
+# ubc is fetched as the connecting user, for the same reason as the apt key: `become`
+# drops the user's proxy variables. A missing tasks/ubc.yml gives an empty task,
+# so the count is 0, not 1, and the check fails.
+ubc_task=$(awk '/^ +- name:/ { if (found) exit; buf="" } { buf = buf $0 "\n" }
+  /\{\{ dev_stack_ubc_url \}\}/ { found=1 }
+  END { if (found) printf "%s", buf }' "$UBC" 2>/dev/null)
+check "H6: the ubc download runs as the connecting user" \
+  "$(printf '%s' "$ubc_task" | grep -c 'become: false')" "1"
+
+# Same Python 3.13+ X.509 reason as H4: the ubc download comes with curl.
+check "H7: the ubc download uses curl, not get_url" \
+  "$(grep -c 'ansible\.builtin\.get_url:' "$UBC" 2>/dev/null | head -n1 || true) $(printf '%s' "$ubc_task" | grep -c -- '- curl$')" "0 1"
 
 echo
 if [ "$fails" -eq 0 ]; then echo "all passed"; else echo "$fails failed"; fi

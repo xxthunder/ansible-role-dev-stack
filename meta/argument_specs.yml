@@ -79,6 +79,18 @@ argument_specs:
       dev_stack_uv_bin_dir:
         type: str
         description: Where the uv and uvx links are placed.
+      dev_stack_install_ubc:
+        type: bool
+        description: Install ubc, the ubCode CLI, for checking sphinx-needs projects.
+      dev_stack_ubc_version:
+        type: str
+        description: ubc release to install, without a leading "v".
+      dev_stack_ubc_url:
+        type: str
+        description: Download URL of the ubc binary; derived from the version. useblocks publishes no checksum, so none is verified.
+      dev_stack_ubc_path:
+        type: str
+        description: Where the ubc binary is installed.
       dev_stack_install_build_prerequisites:
         type: bool
         description: Install the build prerequisites of a C/C++ product line (apt packages, CPython, Poetry); needs uv.
