@@ -41,16 +41,22 @@ Checked on 2026-11-25 for 0.40.0:
 when it is installed; since 0.40.0 the open-source check also works in git worktrees. The role
 installs no licence key: a key is a credential, like `tea login add` (ARDS-007).
 
-**Open questions** (for the refinement before the pull):
-- *Checksum.* Without a published checksum, either the role pins the SHA-256 in a variable
-  next to the version (a bump changes both), or it downloads without verification. ARDS-012
-  shows that `get_url` without a checksum connects on every run.
-- *Download behind a TLS-inspecting proxy.* `get_url` runs as root and fails there (ARDS-013).
-  The Claude Code and `gh` blocks download as the connecting user with `curl` and copy as
-  root; `tea` and uv still use `get_url`. Which one `ubc` follows decides whether it works on
-  such a host.
+*Prior art.* useblocks' installation page (0.40.0) publishes one versioned URL per platform,
+with no checksum, no signature and no install location. Their CI action `useblocks/ubc-action`
+downloads with `curl` without verification, and decides whether to download by comparing
+`ubc --version` with the requested version.
 
 **Scope Decisions**:
+- **No checksum; the installed version decides** (author, 2026-11-25): useblocks publishes no
+  checksum, and its own `ubc-action` verifies none. The role follows that action: it reads
+  `ubc --version` and downloads only when the version differs from `dev_stack_ubc_version`. A
+  run without a change makes no connection.
+- **`curl` as the connecting user, copied as root** (author, 2026-11-25): `become` drops the
+  proxy variables (ARDS-012), and `get_url` fails behind a TLS-inspecting proxy (ARDS-013).
+  The apt key download in `tasks/apt_repo.yml` is the pattern.
+- **`/usr/local/bin/ubc`** (author, 2026-11-25): like `tea`, DevPod and uv, so every user and
+  agent on the host finds it. A `ubc` in the dev user's `~/.local/bin` shadows it; the role
+  reports that copy and leaves it alone, as it does for uv.
 - **Off by default** (the agent's call): not every consumer works with sphinx-needs;
   `dev_stack_install_ubc` turns it on.
 - **A pinned version** (forced by the server): `dev_stack_ubc_version`, without a leading `v`,
