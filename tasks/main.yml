@@ -208,6 +208,11 @@
         label: "{{ item.item }}"
       when: item.stat.exists
 
+# --- ubc (ubCode CLI) --------------------------------------------------------
+- name: Install ubc
+  ansible.builtin.include_tasks: ubc.yml
+  when: dev_stack_install_ubc | bool
+
 # --- Build prerequisites (C/C++ product line) --------------------------------
 - name: Install the build prerequisites
   ansible.builtin.include_tasks: build_prerequisites.yml

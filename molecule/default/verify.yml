@@ -98,6 +98,16 @@
         path: /usr/local/bin/poetry
       register: poetry_link
 
+    - name: Run ubc
+      ansible.builtin.command: /usr/local/bin/ubc --version
+      changed_when: false
+      register: ubc_version
+
+    - name: Stat the ubc binary
+      ansible.builtin.stat:
+        path: /usr/local/bin/ubc
+      register: ubc_bin
+
     - name: Assert the stack is in place
       ansible.builtin.assert:
         that:
@@ -130,9 +140,154 @@
           - user_python_link.stat.islnk
           - user_python_link.stat.lnk_target == '/usr/bin/python3'
           - poetry_link.stat.islnk
+          - ubc_version.stdout == 'ubc 0.40.0'
+          - ubc_bin.stat.mode == '0755'
+          - ubc_bin.stat.pw_name == 'root'
 
     - name: Assert qemu-guest-agent is not installed by default
       ansible.builtin.assert:
         that:
           - "'qemu-guest-agent' not in ansible_facts.packages"
         fail_msg: qemu-guest-agent is a VM concern; the role must not install it unless asked.
+
+    - name: Replace ubc with an older stub
+      ansible.builtin.copy:
+        dest: /usr/local/bin/ubc
+        content: "#!/bin/sh\necho 'ubc 0.39.0'\n"
+        mode: "0755"
+
+    - name: Run the ubc tasks again, as a version bump
+      ansible.builtin.include_role:
+        name: dev-stack
+        tasks_from: ubc
+      vars:
+        dev_stack_user: vmuser
+        dev_stack_user_home: /home/vmuser
+        dev_stack_install_ubc: true
+
+    - name: Run ubc after the bump
+      ansible.builtin.command: /usr/local/bin/ubc --version
+      changed_when: false
+      register: ubc_version_bumped
+
+    - name: Assert the bump replaced the stub
+      ansible.builtin.assert:
+        that:
+          - ubc_version_bumped.stdout == 'ubc 0.40.0'
+        fail_msg: the ubc tasks did not replace an ubc of another version.
+
+    - name: Stat ubc before a run that must change nothing
+      ansible.builtin.stat:
+        path: /usr/local/bin/ubc
+      register: ubc_before
+
+    - name: Run the ubc tasks once more
+      ansible.builtin.include_role:
+        name: dev-stack
+        tasks_from: ubc
+      vars:
+        dev_stack_user: vmuser
+        dev_stack_user_home: /home/vmuser
+        dev_stack_install_ubc: true
+
+    - name: Stat ubc after that run
+      ansible.builtin.stat:
+        path: /usr/local/bin/ubc
+      register: ubc_after
+
+    - name: Assert the run at the right version left ubc alone
+      ansible.builtin.assert:
+        that:
+          - ubc_after.stat.checksum == ubc_before.stat.checksum
+          - ubc_after.stat.mtime == ubc_before.stat.mtime
+        fail_msg: the ubc tasks rewrote an ubc that already had the right version.
+
+    - name: Replace ubc with an older stub, to test a download that is not a binary
+      ansible.builtin.copy:
+        dest: /usr/local/bin/ubc
+        content: "#!/bin/sh\necho 'ubc 0.39.0'\n"
+        mode: "0755"
+
+    - name: Check that the role fails when the download is not the pinned ubc
+      block:
+        - name: Run the ubc tasks with a url that serves a plain text file
+          ansible.builtin.include_role:
+            name: dev-stack
+            tasks_from: ubc
+          vars:
+            dev_stack_user: vmuser
+            dev_stack_user_home: /home/vmuser
+            dev_stack_install_ubc: true
+            dev_stack_ubc_url: file:///etc/hostname
+
+        - name: Fail when the role did not fail
+          ansible.builtin.fail:
+            msg: the role installed a ubc that does not print the pinned version
+      rescue:
+        - name: Assert the role failed on its own, not on the test
+          ansible.builtin.assert:
+            that:
+              - ansible_failed_task.name != 'Fail when the role did not fail'
+            fail_msg: the role installed a ubc that does not print the pinned version.
+      always:
+        - name: Restore the real ubc after the failure test
+          ansible.builtin.include_role:
+            name: dev-stack
+            tasks_from: ubc
+          vars:
+            dev_stack_user: vmuser
+            dev_stack_user_home: /home/vmuser
+            dev_stack_install_ubc: true
+
+        - name: Run ubc after the restore
+          ansible.builtin.command: /usr/local/bin/ubc --version
+          changed_when: false
+          register: ubc_version_restored
+
+        - name: Assert the restore put the real ubc back
+          ansible.builtin.assert:
+            that:
+              - ubc_version_restored.stdout == 'ubc 0.40.0'
+            fail_msg: the ubc tasks did not restore ubc 0.40.0 over a file that is not a binary.
+
+    - name: Create the bin dir of the login user for a shadow stub
+      ansible.builtin.file:
+        path: /home/vmuser/.local/bin
+        state: directory
+        owner: vmuser
+        group: vmuser
+        mode: "0755"
+
+    - name: Place an ubc of the login user's own in its bin dir
+      ansible.builtin.copy:
+        dest: /home/vmuser/.local/bin/ubc
+        content: "#!/bin/sh\necho 'ubc 0.1.0'\n"
+        owner: vmuser
+        group: vmuser
+        mode: "0755"
+
+    - name: Run the ubc tasks with a shadowing ubc present
+      ansible.builtin.include_role:
+        name: dev-stack
+        tasks_from: ubc
+      vars:
+        dev_stack_user: vmuser
+        dev_stack_user_home: /home/vmuser
+        dev_stack_install_ubc: true
+
+    - name: Stat the login user's own ubc afterwards
+      ansible.builtin.stat:
+        path: /home/vmuser/.local/bin/ubc
+      register: ubc_shadow_after
+
+    - name: Assert the role reported the shadow and kept it
+      ansible.builtin.assert:
+        that:
+          - dev_stack_user_ubc.stat.exists
+          - ubc_shadow_after.stat.exists
+        fail_msg: the role must report an ubc in ~/.local/bin and never remove it.
+
+    - name: Remove the shadow stub
+      ansible.builtin.file:
+        path: /home/vmuser/.local/bin/ubc
+        state: absent

@@ -3,7 +3,7 @@
 # Linux dev host that runs DevPod workspaces. Thin by design: the host is a
 # container host for DevPod. Project toolchains live inside each workspace's
 # .devcontainer, NOT on the host — so this role installs only Docker, the
-# DevPod CLI, tmux, git-lfs, curl, qemu-guest-agent, tea, uv, Claude Code, gh and
+# DevPod CLI, tmux, git-lfs, curl, qemu-guest-agent, tea, uv, ubc, Claude Code, gh and
 # the build prerequisites of a C/C++ product line (apt packages, CPython, Poetry)
 # on request, the apt upgrade, the operator's shell (zsh + oh-my-zsh), and a
 # persistent ssh-agent holding the forge-only git identity (the two-identity
@@ -108,6 +108,18 @@ dev_stack_uv_url: "https://github.com/astral-sh/uv/releases/download/{{ dev_stac
 # Releases unpack to <home>/<version>; uv and uvx are linked into the bin dir.
 dev_stack_uv_home: "/opt/uv"
 dev_stack_uv_bin_dir: "/usr/local/bin"
+
+# --- ubc (ubCode CLI) --------------------------------------------------------
+# A coding agent or a shell on the host checks sphinx-needs projects with ubc,
+# the ubCode CLI from useblocks. Off by default. The licence key is a credential:
+# the operator sets it, the role does not.
+dev_stack_install_ubc: false
+# A release without a leading "v"; the download server has no "latest".
+# useblocks publishes no checksum, so the installed version decides: the role
+# downloads the binary again only when `ubc --version` differs from this one.
+dev_stack_ubc_version: "0.40.0"
+dev_stack_ubc_url: "https://download.useblocks.com/ubc/{{ dev_stack_ubc_version }}/ubc-linux-x64-{{ dev_stack_ubc_version }}"
+dev_stack_ubc_path: "/usr/local/bin/ubc"
 
 # --- Build prerequisites (C/C++ product line) --------------------------------
 # What a CMake/Poetry product line needs to build on the host itself, outside
