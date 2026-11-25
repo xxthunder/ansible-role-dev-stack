@@ -1,6 +1,6 @@
 # [ARDS-016] Install ubc, the ubCode CLI, from useblocks' download server, on request
 
-**Status**: Open
+**Status**: In Progress
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
