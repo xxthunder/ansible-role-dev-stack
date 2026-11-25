@@ -43,6 +43,12 @@ identity that outlives a disconnect.
   linked into `/usr/local/bin`. The default is past the eMudhra/emSign CA incident of
   October 2026 (0.13.4 or later). A uv the user installed by hand into `~/.local/bin`
   shadows the role's; the role warns about it and leaves it in place.
+- **ubc**, only with `dev_stack_install_ubc: true`: the ubCode CLI, for checking
+  sphinx-needs projects from any shell on the host. A pinned release, downloaded with curl
+  as the connecting user. useblocks publishes no checksum, so the role downloads it again
+  only when `ubc --version` differs from the pinned version. The licence key is a
+  credential and stays with the operator. An ubc the user installed by hand into
+  `~/.local/bin` shadows the role's; the role warns about it and leaves it in place.
 - **gh**, only with `dev_stack_install_gh: true`: the GitHub CLI, for a coding agent that
   runs on the host and opens pull requests on GitHub. It comes from GitHub's signed apt
   repository; `apt upgrade` updates it. The signing key is fetched fresh on every run,
@@ -199,6 +205,10 @@ values in [`defaults/main.yml`](defaults/main.yml).
 | `dev_stack_uv_url` | derived from the version | Download URL; its SHA-256 file sits next to it. |
 | `dev_stack_uv_home` | `/opt/uv` | Releases unpack to `<home>/<version>`. |
 | `dev_stack_uv_bin_dir` | `/usr/local/bin` | Where the `uv` and `uvx` links go. |
+| `dev_stack_install_ubc` | `false` | Install ubc, the ubCode CLI. |
+| `dev_stack_ubc_version` | `0.40.0` | ubc release, without a leading "v"; an installed ubc that prints another version is downloaded again. |
+| `dev_stack_ubc_url` | derived from the version | Download URL; useblocks publishes no checksum. |
+| `dev_stack_ubc_path` | `/usr/local/bin/ubc` | Where the binary is installed. |
 | `dev_stack_install_claude_code` | `false` | Install Claude Code from Anthropic's apt repository. |
 | `dev_stack_claude_code_channel` | `stable` | `stable` or `latest`; the apt suite of the repository. |
 | `dev_stack_claude_code_gpg_url` | Anthropic's key URL | Anthropic's apt signing key. |

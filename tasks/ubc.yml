@@ -1,0 +1,97 @@
+---
+# Install ubc, the ubCode CLI, as one binary. Included from main.yml when
+# dev_stack_install_ubc is true; the Molecule verify run includes it again to
+# test a version bump. It needs dev_stack_user and dev_stack_user_home.
+# useblocks publishes no checksum, so the installed version decides: the binary
+# is downloaded again only when `ubc --version` is not the pinned version.
+- name: Read the installed ubc version
+  # A missing or broken binary gives an empty or unmatched stdout, which leads
+  # to a download below, not to a failed play.
+  ansible.builtin.command:
+    argv:
+      - "{{ dev_stack_ubc_path }}"
+      - --version
+  register: dev_stack_ubc_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false  # reads only
+
+- name: Download and place ubc {{ dev_stack_ubc_version }}
+  when: dev_stack_ubc_installed.stdout | default('') != 'ubc ' ~ dev_stack_ubc_version
+  block:
+    - name: Create a temp file for the ubc download
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .ubc
+      become: false
+      changed_when: false
+      check_mode: false  # touches only a temp file that `always:` removes
+      register: dev_stack_ubc_tmp
+
+    - name: Download the ubc binary
+      # As the connecting user, because `become` drops the user's proxy
+      # variables (ARDS-012). With curl, not get_url: Python 3.13+ checks X.509
+      # strictly and refuses a TLS-inspecting proxy's CA whose Basic Constraints
+      # are not marked critical; curl verifies the chain without that check.
+      ansible.builtin.command:  # noqa: command-instead-of-module
+        argv:
+          - curl
+          - --fail
+          - --silent
+          - --show-error
+          - --location
+          - --retry
+          - "3"
+          - --output
+          - "{{ dev_stack_ubc_tmp.path }}"
+          - "{{ dev_stack_ubc_url }}"
+      become: false
+      changed_when: false
+      check_mode: false  # touches only the temp file
+
+    - name: Place the ubc binary
+      ansible.builtin.copy:
+        src: "{{ dev_stack_ubc_tmp.path }}"
+        dest: "{{ dev_stack_ubc_path }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Check that the placed ubc is the pinned version
+      # useblocks publishes no checksum, so the version is the only check of the
+      # download: a proxy block page answered with 200 would otherwise be
+      # installed. In check mode the copy is only simulated, so skip the check.
+      ansible.builtin.command:
+        argv:
+          - "{{ dev_stack_ubc_path }}"
+          - --version
+      register: dev_stack_ubc_placed
+      changed_when: false
+      failed_when: dev_stack_ubc_placed.stdout | default('') != 'ubc ' ~ dev_stack_ubc_version
+      when: not ansible_check_mode
+
+  always:
+    - name: Remove the temp file of the ubc download
+      ansible.builtin.file:
+        path: "{{ dev_stack_ubc_tmp.path }}"
+        state: absent
+      become: false
+      changed_when: false
+      check_mode: false
+      when: dev_stack_ubc_tmp.path is defined
+
+- name: Look for an ubc in the user's ~/.local/bin
+  # A copy there comes first on the user's PATH and shadows the role's. It is
+  # the user's file: the role reports it and leaves it alone.
+  ansible.builtin.stat:
+    path: "{{ dev_stack_user_home }}/.local/bin/ubc"
+  register: dev_stack_user_ubc
+
+- name: Warn that the user's ubc shadows the role's
+  ansible.builtin.debug:
+    msg: >-
+      {{ dev_stack_user_ubc.stat.path }} shadows {{ dev_stack_ubc_path }}
+      for {{ dev_stack_user }}. Remove it to use the role's ubc
+      {{ dev_stack_ubc_version }}.
+  when: dev_stack_user_ubc.stat.exists
