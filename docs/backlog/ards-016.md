@@ -1,6 +1,6 @@
-# [ARDS-016] Install ubc, the ubCode CLI, from useblocks' download server, on request
+# [ARDS-016] ✅ DONE - Install ubc, the ubCode CLI, from useblocks' download server, on request
 
-**Status**: In Progress
+**Status**: Done (2026-11-26)
 **Priority**: Medium
 **Component**: `tasks/main.yml`, `defaults/main.yml`, `meta/argument_specs.yml`, `README.md`,
 test scenario
@@ -68,12 +68,12 @@ downloads with `curl` without verification, and decides whether to download by c
   consuming repository, after this item ships.
 
 **Acceptance Criteria**:
-- [ ] With `dev_stack_install_ubc: true`, the role installs `ubc` in the version
+- [x] With `dev_stack_install_ubc: true`, the role installs `ubc` in the version
       `dev_stack_ubc_version` to `/usr/local/bin/ubc` (mode 0755), and `ubc --version` prints
       that version
-- [ ] Bumping `dev_stack_ubc_version` replaces the binary on the next run; a run without a
+- [x] Bumping `dev_stack_ubc_version` replaces the binary on the next run; a run without a
       change reports no change
-- [ ] The download is verified against a SHA-256, or the item records why it is not
-- [ ] With the default, the role installs no `ubc`
-- [ ] The defaults, `meta/argument_specs.yml` and the README describe the variables
-- [ ] CI is green after the push
+- [x] The download is verified against a SHA-256, or the item records why it is not
+- [x] With the default, the role installs no `ubc`
+- [x] The defaults, `meta/argument_specs.yml` and the README describe the variables
+- [x] CI is green after the push
